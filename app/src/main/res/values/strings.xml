@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ContactHub</string>
+    <string name="title_group">分组</string>
+    <string name="title_dashboard">通讯录</string>
+    <string name="title_notifications">我的</string>
+    <string name="title_setting">设置</string>
+</resources>
