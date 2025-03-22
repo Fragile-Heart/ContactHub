@@ -21,8 +21,12 @@ import java.util.Map;
 public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSortByPinyinAdapter.ViewHolder> {
 
     Map<String, List<Contact>> contactMapByPinyin;
-    
+    // 添加监听器字段和设置方法
+    private ContactAdapter.OnContactClickListener listener;
 
+    public void setOnContactClickListener(ContactAdapter.OnContactClickListener listener) {
+        this.listener = listener;
+    }
     public ContactSortByPinyinAdapter(Map<String, List<Contact>> contactMapByPinyin) {
         this.contactMapByPinyin = contactMapByPinyin;
     }
@@ -37,6 +41,7 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+
         // 获取当前位置的拼音首字母
         String pinyin = (String) contactMapByPinyin.keySet().toArray()[position];
 
@@ -45,6 +50,14 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
 
         // 为嵌套RecyclerView设置LayoutManager和Adapter
         holder.contactsRecyclerView.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
+
+        // 创建内部ContactAdapter并传递点击监听器
+        ContactAdapter contactAdapter = new ContactAdapter(contactMapByPinyin.get(pinyin));
+        if (listener != null) {
+            contactAdapter.setOnContactClickListener(listener);
+        }
+        holder.contactsRecyclerView.setAdapter(contactAdapter);
+
         holder.contactsRecyclerView.setAdapter(new ContactAdapter(contactMapByPinyin.get(pinyin)));
 
         // 确保子RecyclerView显示完整内容

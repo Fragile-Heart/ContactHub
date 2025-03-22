@@ -27,6 +27,11 @@ public class Contact {
     }
     public Contact()
     {
+        this.mobileNumber = "无";
+        this.telephoneNumber = "无";
+        this.email = "无";
+        this.address = "无";
+        this.groupIds = null;
     }
     public void generatePinyin() {
         if (name != null && !name.isEmpty()) {

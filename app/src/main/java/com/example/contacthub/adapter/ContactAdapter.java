@@ -15,6 +15,30 @@ package com.example.contacthub.adapter;
 
     public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
         private List<Contact> contacts;
+        private OnContactClickListener listener;
+
+        public interface OnContactClickListener {
+            void onContactClick(Contact contact);
+        }
+
+        // 设置点击监听器的方法
+        public void setOnContactClickListener(OnContactClickListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            Contact contact = contacts.get(position);
+            holder.nameTextView.setText(contact.getName());
+
+            // 设置点击事件
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onContactClick(contact);
+                }
+            });
+        }
+
 
         public ContactAdapter(List<Contact> contacts) {
             this.contacts = contacts;
@@ -26,12 +50,6 @@ package com.example.contacthub.adapter;
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_contact, parent, false);
             return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            Contact contact = contacts.get(position);
-            holder.nameTextView.setText(contact.getName());
         }
 
         @Override

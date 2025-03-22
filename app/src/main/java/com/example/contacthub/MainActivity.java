@@ -1,24 +1,25 @@
 package com.example.contacthub;
 
-    import android.content.Context;
-    import android.os.Bundle;
-    import android.util.Log;
-    import android.view.ViewGroup;
+import android.content.Context;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.ViewGroup;
 
-    import androidx.core.view.WindowCompat;
-    import androidx.core.view.ViewCompat;
-    import androidx.core.view.WindowInsetsCompat;
-    import androidx.core.graphics.Insets;
+import androidx.activity.OnBackPressedCallback;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.graphics.Insets;
 
-    import androidx.appcompat.app.AppCompatActivity;
-    import androidx.navigation.NavController;
-    import androidx.navigation.fragment.NavHostFragment;
-    import androidx.navigation.ui.NavigationUI;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
 
-    import com.example.contacthub.databinding.ActivityMainBinding;
+import com.example.contacthub.databinding.ActivityMainBinding;
 
-    import java.io.FileOutputStream;
-    import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,11 +64,26 @@ public class MainActivity extends AppCompatActivity {
             });
 
             NavigationUI.setupWithNavController(binding.navView, navController);
+
+            // 修复多次点击同一导航项导致返回栈问题
+            binding.navView.setOnItemReselectedListener(item -> {
+                // 什么都不做，防止重复导航添加到回退栈
+            });
+
+            // 添加后退导航处理 (使用非弃用API)
+            getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+                @Override
+                public void handleOnBackPressed() {
+                    if (!navController.popBackStack()) {
+                        // 如果没有更多后退堆栈，则完成activity
+                        finish();
+                    }
+                }
+            });
         }
     }
 
     private void initializeData() {
-        //FileUtil fileUtil = new FileUtil(this);
 
         // 添加联系人数据
         String contactsJson = "[{\"id\":1,\"name\":\"小明\",\"phone\":\"123456789\",\"groupIds\":[1,2,3]},{\"id\":2,\"name\":\"小红\",\"phone\":\"987654321\",\"groupIds\":[1,4]},{\"id\":3,\"name\":\"张三\",\"phone\":\"111111111\",\"groupIds\":[2,3]},{\"id\":4,\"name\":\"李四\",\"phone\":\"222222222\",\"groupIds\":[1,3]},{\"id\":5,\"name\":\"王五\",\"phone\":\"333333333\",\"groupIds\":[2,4]},{\"id\":6,\"name\":\"赵六\",\"phone\":\"444444444\",\"groupIds\":[1,2]},{\"id\":7,\"name\":\"孙七\",\"phone\":\"555555555\",\"groupIds\":[3,4]},{\"id\":8,\"name\":\"周八\",\"phone\":\"666666666\",\"groupIds\":[1,4]},{\"id\":9,\"name\":\"吴九\",\"phone\":\"777777777\",\"groupIds\":[2,3]},{\"id\":10,\"name\":\"郑十\",\"phone\":\"888888888\",\"groupIds\":[1,4]},{\"id\":11,\"name\":\"冯十一\",\"phone\":\"999999999\",\"groupIds\":[1,2]},{\"id\":12,\"name\":\"陈十二\",\"phone\":\"000000000\",\"groupIds\":[3,4]},{\"id\":13,\"name\":\"刘十三\",\"phone\":\"123123123\",\"groupIds\":[1,3]},{\"id\":14,\"name\":\"黄十四\",\"phone\":\"321321321\",\"groupIds\":[2,4]},{\"id\":15,\"name\":\"周十五\",\"phone\":\"456456456\",\"groupIds\":[1,2]},{\"id\":16,\"name\":\"吴十六\",\"phone\":\"654654654\",\"groupIds\":[3,4]},{\"id\":17,\"name\":\"郑十七\",\"phone\":\"789789789\",\"groupIds\":[1,4]},{\"id\":18,\"name\":\"王十八\",\"phone\":\"987987987\",\"groupIds\":[2,3]},{\"id\":19,\"name\":\"曾辉\",\"phone\":\"123456789\",\"groupIds\":[1,2]}]";

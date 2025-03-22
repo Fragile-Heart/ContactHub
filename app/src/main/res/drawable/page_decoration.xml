@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 半透明的顶部波浪装饰 -->
+    <item android:top="-300dp">
+        <shape>
+            <solid android:color="#083F51B5" />
+            <corners android:radius="300dp" />
+        </shape>
+    </item>
+
+    <!-- 底部装饰元素 -->
+    <item android:bottom="-430dp" android:right="-300dp">
+        <shape>
+            <solid android:color="#085E35B1" />
+            <corners android:radius="500dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -7,15 +7,15 @@
 
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.example.contacthub.ui.contactList.ContactListFragment"
-        android:label="@string/title_dashboard"
+        android:name="com.example.contacthub.ui.contact.ContactCardFragment"
+        android:label="@string/title_contactList"
         tools:layout="@layout/fragment_contact_list" />
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.example.contacthub.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:name="com.example.contacthub.ui.my.MyFragment"
+        android:label="@string/title_my"
+        tools:layout="@layout/fragment_contact" />
 
     <fragment
         android:id="@+id/navigation_home"
