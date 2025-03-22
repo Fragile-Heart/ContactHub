@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.example.contacthub.ui.contact.ContactCardFragment"
+        android:name="com.example.contacthub.ui.contactList.ContactListFragment"
         android:label="@string/title_contactList"
         tools:layout="@layout/fragment_contact_list" />
 
