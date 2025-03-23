@@ -32,15 +32,13 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
     private FileUtil fileUtil;
     private List<Contact> allContacts;
     Map<String, List<Contact>> contactMapByPinyin;
-    
-    private AlphabetIndexView alphabetIndexView;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // 使用视图绑定初始化布局
         binding = FragmentContactListBinding.inflate(inflater, container, false);
 
-        alphabetIndexView = binding.alphabetIndex;
+        AlphabetIndexView alphabetIndexView = binding.alphabetIndex;
         alphabetIndexView.setOnLetterSelectedListener(this);
         return binding.getRoot();
     }

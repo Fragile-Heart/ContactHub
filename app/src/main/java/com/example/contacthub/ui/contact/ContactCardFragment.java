@@ -20,14 +20,6 @@ public class ContactCardFragment extends Fragment {
 
     private FragmentContactBinding binding;
 
-    public static ContactCardFragment newInstance(Contact contact) {
-        ContactCardFragment fragment = new ContactCardFragment();
-        Bundle args = new Bundle();
-        args.putParcelable("contact", (Parcelable) contact);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentContactBinding.inflate(inflater, container, false);

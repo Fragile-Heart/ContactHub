@@ -1,5 +1,7 @@
 package com.example.contacthub.adapter;
 
+    import android.content.Context;
+    import android.content.Intent;
     import android.view.LayoutInflater;
     import android.view.View;
     import android.view.ViewGroup;
@@ -10,21 +12,22 @@ package com.example.contacthub.adapter;
 
     import com.example.contacthub.R;
     import com.example.contacthub.model.Contact;
+    import com.example.contacthub.ui.contactDetail.ContactDetailActivity;
 
     import java.util.List;
 
     public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
         private List<Contact> contacts;
-        private OnContactClickListener listener;
-
-        public interface OnContactClickListener {
-            void onContactClick(Contact contact);
-        }
-
-        // 设置点击监听器的方法
-        public void setOnContactClickListener(OnContactClickListener listener) {
-            this.listener = listener;
-        }
+//        private OnContactClickListener listener;
+//
+//        public interface OnContactClickListener {
+//            void onContactClick(Contact contact);
+//        }
+//
+//        // 设置点击监听器的方法
+//        public void setOnContactClickListener(OnContactClickListener listener) {
+//            this.listener = listener;
+//        }
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
@@ -33,9 +36,11 @@ package com.example.contacthub.adapter;
 
             // 设置点击事件
             holder.itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onContactClick(contact);
-                }
+
+                Context context = holder.itemView.getContext();
+                Intent intent = new Intent(context, ContactDetailActivity.class);
+                intent.putExtra("contact", contact);
+                context.startActivity(intent);
             });
         }
 

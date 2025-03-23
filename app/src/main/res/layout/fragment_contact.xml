@@ -37,6 +37,13 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <Button
+                android:id="@+id/btn_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="返回"
+                android:layout_margin="16dp" />
+
             <!-- 联系人名片 -->
             <com.example.contacthub.widget.ContactCardView
                 android:id="@+id/contact_card"

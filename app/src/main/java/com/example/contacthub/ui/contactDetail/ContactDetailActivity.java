@@ -1,61 +1,73 @@
-package com.example.contacthub.ui.my;
+package com.example.contacthub.ui.contactDetail;
 
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.content.Intent;
 import android.net.Uri;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 
 import com.example.contacthub.databinding.FragmentContactBinding;
 import com.example.contacthub.model.Contact;
 import com.example.contacthub.widget.ContactCardView;
+import android.widget.TextView;
 
-public class MyFragment extends Fragment {
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.contacthub.R;
+;
+
+public class ContactDetailActivity extends AppCompatActivity {
 
     private FragmentContactBinding binding;
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                       ViewGroup container, Bundle savedInstanceState) {
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    binding = FragmentContactBinding.inflate(inflater, container, false);
-    View root = binding.getRoot();
+        // 使用 ViewBinding 绑定布局
+        binding = FragmentContactBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-    setupContactCard();
+        // 获取传递的 Contact 对象
+        Contact contact = (Contact) getIntent().getSerializableExtra("contact");
+        if (contact != null) {
+            setupContactCard(contact);
+            // 使用 contact 对象
+            TextView nameTextView = findViewById(R.id.tv_contact_name);
+            nameTextView.setText(contact.getName());
+            TextView emailTextView = findViewById(R.id.tv_contact_email);
+            emailTextView.setText(contact.getEmail());
+            TextView addressTextView = findViewById(R.id.tv_contact_address);
+            addressTextView.setText(contact.getAddress());
+            TextView mobileTextView = findViewById(R.id.tv_mobile_number);
+            mobileTextView.setText(contact.getMobileNumber());
+            TextView telephoneTextView = findViewById(R.id.tv_telephone_number);
+            telephoneTextView.setText(contact.getTelephoneNumber());
 
-    return root;
+        } else {
+            // 处理未找到联系人信息的情况
+            Toast.makeText(this, "未找到联系人信息", Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 
-    private void setupContactCard() {
-        // 创建一个测试数据
-        Contact sampleContact = new Contact();
-        sampleContact.setName("张三");
-        sampleContact.setMobileNumber("178-2526-0421");
-        sampleContact.setTelephoneNumber("010-1234-5678");
-        sampleContact.setEmail("zhangsan@example.com");
-        sampleContact.setAddress("北京市海淀区中关村大街1号aaaaaaaaaaaaaaaaaaaaaa");
-
+    private void setupContactCard(Contact contact) {
         // 设置联系人卡片视图
         ContactCardView contactCard = binding.contactCard;
-        contactCard.setContact(sampleContact);
+        contactCard.setContact(contact);
 
         // 设置拨打电话按钮点击事件
-        binding.btnCall.setOnClickListener(v -> {
-            handleCallButtonClick(sampleContact);
-        });
+        binding.btnCall.setOnClickListener(v -> handleCallButtonClick(contact));
 
         // 设置发送短信按钮点击事件
-        binding.btnMessage.setOnClickListener(v -> {
-            handleMessageButtonClick(sampleContact);
-        });
+        binding.btnMessage.setOnClickListener(v -> handleMessageButtonClick(contact));
 
+        // 隐藏分享按钮（如果不需要）
         binding.btnShare.setVisibility(View.GONE);
 
-        binding.btnBack.setVisibility(View.GONE);
+        binding.btnBack.setOnClickListener(v -> finish());
     }
 
     private void handleCallButtonClick(Contact contact) {
@@ -67,7 +79,7 @@ public class MyFragment extends Fragment {
             String[] options = new String[]{"手机: " + contact.getMobileNumber(),
                     "座机: " + contact.getTelephoneNumber()};
 
-            new AlertDialog.Builder(requireContext())
+            new AlertDialog.Builder(this)
                     .setTitle("选择拨打号码")
                     .setItems(options, (dialog, which) -> {
                         String number = which == 0 ? contact.getMobileNumber() : contact.getTelephoneNumber();
@@ -81,7 +93,7 @@ public class MyFragment extends Fragment {
             // 只有座机号
             dialNumber(contact.getTelephoneNumber());
         } else {
-            Toast.makeText(requireContext(), "无可用电话号码", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "无可用电话号码", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -92,7 +104,7 @@ public class MyFragment extends Fragment {
             // 只提供手机号发送短信
             sendSms(contact.getMobileNumber());
         } else {
-            Toast.makeText(requireContext(), "没有可用的手机号码发送短信", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "没有可用的手机号码发送短信", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -106,11 +118,5 @@ public class MyFragment extends Fragment {
         Intent intent = new Intent(Intent.ACTION_DIAL);
         intent.setData(Uri.parse("tel:" + phoneNumber.replaceAll("[^0-9]", "")));
         startActivity(intent);
-    }
-
-    @Override
-    public void onDestroyView() {
-    super.onDestroyView();
-    binding = null;
     }
 }

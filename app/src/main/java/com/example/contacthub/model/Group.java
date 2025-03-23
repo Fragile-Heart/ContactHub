@@ -6,11 +6,13 @@ public class Group {
     private int id;
     private String name;
 
+    private final List<Integer> contactIds;
     private boolean expanded;
 
 
     public Group(int id, List<Integer> contactIds, boolean expanded, String name) {
         this.id = id;
+        this.contactIds = contactIds;
         this.expanded = expanded;
         this.name = name;
     }

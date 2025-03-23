@@ -4,9 +4,11 @@ import static com.example.contacthub.utils.ChineseSurnameCorrection.SURNAME_PINY
 
 import com.example.contacthub.utils.ChineseSurnameCorrection;
 import com.github.promeg.pinyinhelper.Pinyin;
+
+import java.io.Serializable;
 import java.util.List;
 
-public class Contact {
+public class Contact implements Serializable {
     private Integer id;
     private String name;
     private String mobileNumber;
