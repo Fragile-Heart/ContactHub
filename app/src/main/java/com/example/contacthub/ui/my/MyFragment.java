@@ -11,51 +11,63 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.example.contacthub.R;
 import com.example.contacthub.databinding.FragmentContactBinding;
 import com.example.contacthub.model.Contact;
-import com.example.contacthub.widget.ContactCardView;
+import com.google.android.material.appbar.AppBarLayout;
 
 public class MyFragment extends Fragment {
 
     private FragmentContactBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
-                       ViewGroup container, Bundle savedInstanceState) {
+                        ViewGroup container, Bundle savedInstanceState) {
 
-    binding = FragmentContactBinding.inflate(inflater, container, false);
-    View root = binding.getRoot();
+        binding = FragmentContactBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
 
-    setupContactCard();
+        // 隐藏顶部 AppBar，因为主界面已有导航栏
+        binding.appbar.setVisibility(View.GONE);
+        
+        // 隐藏浮动编辑按钮
+        //binding.fabEdit.setVisibility(View.GONE);
+        
+        // 调整 NestedScrollView 的布局参数，不再依赖于 AppBar
+        ViewGroup.LayoutParams params = binding.nestedScrollView.getLayoutParams();
+        if (params instanceof androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams) {
+            ((androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams) params).setBehavior(null);
+        }
 
-    return root;
+        setupUserProfile();
+
+        return root;
     }
 
-    private void setupContactCard() {
-        // 创建一个测试数据
-        Contact sampleContact = new Contact();
-        sampleContact.setName("张三");
-        sampleContact.setMobileNumber("178-2526-0421");
-        sampleContact.setTelephoneNumber("010-1234-5678");
-        sampleContact.setEmail("zhangsan@example.com");
-        sampleContact.setAddress("北京市海淀区中关村大街1号aaaaaaaaaaaaaaaaaaaaaa");
+    private void setupUserProfile() {
+        // 创建一个用户资料
+        Contact userProfile = new Contact();
+        userProfile.setName("张三");
+        userProfile.setMobileNumber("178-2526-0421");
+        userProfile.setTelephoneNumber("010-1234-5678");
+        userProfile.setEmail("zhangsan@example.com");
+        userProfile.setAddress("北京市海淀区中关村大街1号");
 
-        // 设置联系人卡片视图
-        ContactCardView contactCard = binding.contactCard;
-        contactCard.setContact(sampleContact);
+        // 设置用户信息
+        binding.tvContactName.setText(userProfile.getName());
+        binding.tvMobileNumber.setText(userProfile.getMobileNumber());
+        binding.tvTelephoneNumber.setText(userProfile.getTelephoneNumber());
+        binding.tvContactEmail.setText(userProfile.getEmail());
+        binding.tvContactAddress.setText(userProfile.getAddress());
+        binding.contactAvatar.setImageResource(R.drawable.ic_person);
 
         // 设置拨打电话按钮点击事件
-        binding.btnCall.setOnClickListener(v -> {
-            handleCallButtonClick(sampleContact);
-        });
+        binding.btnCall.setOnClickListener(v -> handleCallButtonClick(userProfile));
 
         // 设置发送短信按钮点击事件
-        binding.btnMessage.setOnClickListener(v -> {
-            handleMessageButtonClick(sampleContact);
-        });
+        binding.btnMessage.setOnClickListener(v -> handleMessageButtonClick(userProfile));
 
+        // 修改分享按钮为"退出登录"
         binding.btnShare.setVisibility(View.GONE);
-
-        binding.btnBack.setVisibility(View.GONE);
     }
 
     private void handleCallButtonClick(Contact contact) {
@@ -110,7 +122,7 @@ public class MyFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-    super.onDestroyView();
-    binding = null;
+        super.onDestroyView();
+        binding = null;
     }
 }

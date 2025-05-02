@@ -1,7 +1,6 @@
 package com.example.contacthub.ui.contactDetail;
 
 import android.os.Bundle;
-import android.view.View;
 import android.content.Intent;
 import android.net.Uri;
 import android.widget.Toast;
@@ -9,14 +8,9 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.contacthub.databinding.FragmentContactBinding;
 import com.example.contacthub.model.Contact;
-import com.example.contacthub.widget.ContactCardView;
-import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.contacthub.R;
-;
 
 public class ContactDetailActivity extends AppCompatActivity {
 
@@ -30,22 +24,22 @@ public class ContactDetailActivity extends AppCompatActivity {
         binding = FragmentContactBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // 设置工具栏
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        
+        // 工具栏返回按钮点击事件
+        binding.toolbar.setNavigationOnClickListener(v -> finish());
+
         // 获取传递的 Contact 对象
         Contact contact = (Contact) getIntent().getSerializableExtra("contact");
         if (contact != null) {
-            setupContactCard(contact);
-            // 使用 contact 对象
-            TextView nameTextView = findViewById(R.id.tv_contact_name);
-            nameTextView.setText(contact.getName());
-            TextView emailTextView = findViewById(R.id.tv_contact_email);
-            emailTextView.setText(contact.getEmail());
-            TextView addressTextView = findViewById(R.id.tv_contact_address);
-            addressTextView.setText(contact.getAddress());
-            TextView mobileTextView = findViewById(R.id.tv_mobile_number);
-            mobileTextView.setText(contact.getMobileNumber());
-            TextView telephoneTextView = findViewById(R.id.tv_telephone_number);
-            telephoneTextView.setText(contact.getTelephoneNumber());
-
+            displayContactInfo(contact);
+            setupActionButtons(contact);
         } else {
             // 处理未找到联系人信息的情况
             Toast.makeText(this, "未找到联系人信息", Toast.LENGTH_SHORT).show();
@@ -53,21 +47,40 @@ public class ContactDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void setupContactCard(Contact contact) {
-        // 设置联系人卡片视图
-        ContactCardView contactCard = binding.contactCard;
-        contactCard.setContact(contact);
+    private void displayContactInfo(Contact contact) {
+        // 设置联系人姓名
+        binding.tvContactName.setText(contact.getName());
+        
+        // 设置联系人详细信息
+        binding.tvMobileNumber.setText(contact.getMobileNumber());
+        binding.tvTelephoneNumber.setText(contact.getTelephoneNumber());
+        binding.tvContactEmail.setText(contact.getEmail());
+        binding.tvContactAddress.setText(contact.getAddress());
+        
+        // 设置浮动编辑按钮点击事件
+        binding.fabEdit.setOnClickListener(v -> {
+            Toast.makeText(this, "编辑联系人: " + contact.getName(), Toast.LENGTH_SHORT).show();
+            // 这里可以添加跳转到编辑页面的代码
+        });
+    }
 
+    private void setupActionButtons(Contact contact) {
         // 设置拨打电话按钮点击事件
         binding.btnCall.setOnClickListener(v -> handleCallButtonClick(contact));
 
         // 设置发送短信按钮点击事件
         binding.btnMessage.setOnClickListener(v -> handleMessageButtonClick(contact));
 
-        // 隐藏分享按钮（如果不需要）
-        binding.btnShare.setVisibility(View.GONE);
-
-        binding.btnBack.setOnClickListener(v -> finish());
+        // 设置分享按钮点击事件
+        binding.btnShare.setOnClickListener(v -> {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            String shareContent = "联系人: " + contact.getName() + "\n" +
+                    "手机: " + contact.getMobileNumber() + "\n" +
+                    "邮箱: " + contact.getEmail();
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareContent);
+            startActivity(Intent.createChooser(shareIntent, "分享联系人"));
+        });
     }
 
     private void handleCallButtonClick(Contact contact) {

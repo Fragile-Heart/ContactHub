@@ -84,9 +84,7 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
          }
          sectionIndexer.put("#", position);
 
-         if(sectionIndexer.get("Z") == null) {
-             sectionIndexer.put("Z", position);
-         }
+         sectionIndexer.putIfAbsent("Z", position);
 
          char index = 'Z';
          for(char c = 'Z'; c >= 'A'; c--) {
