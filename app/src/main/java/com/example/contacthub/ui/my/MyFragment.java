@@ -30,8 +30,8 @@ public class MyFragment extends Fragment {
         binding.appbar.setVisibility(View.GONE);
         
         // 隐藏浮动编辑按钮
-        //binding.fabEdit.setVisibility(View.GONE);
-        
+//        binding.fabEdit.setVisibility(View.GONE);
+
         // 调整 NestedScrollView 的布局参数，不再依赖于 AppBar
         ViewGroup.LayoutParams params = binding.nestedScrollView.getLayoutParams();
         if (params instanceof androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams) {
