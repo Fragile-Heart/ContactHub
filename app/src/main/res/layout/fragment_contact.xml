@@ -2,7 +2,6 @@
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
-            xmlns:tools="http://schemas.android.com/tools"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/fragment_contact"
@@ -50,18 +49,5 @@
                     android:layout_height="wrap_content" />
 
             </androidx.core.widget.NestedScrollView>
-
-            <!-- 浮动编辑按钮 -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab_edit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:contentDescription="编辑联系人"
-                android:src="@drawable/ic_edit"
-                app:backgroundTint="#3F51B5"
-                app:layout_anchor="@id/contact_card_view"
-                app:layout_anchorGravity="bottom|end"
-                app:tint="@color/white" />
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
