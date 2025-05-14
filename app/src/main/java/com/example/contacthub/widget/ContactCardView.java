@@ -12,6 +12,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.contacthub.ui.contactDetail.ContactEditActivity;
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
 import com.google.android.material.button.MaterialButton;
@@ -32,7 +33,6 @@ public class ContactCardView extends FrameLayout {
     private TextView tvAddress;
     private ShapeableImageView contactAvatar;
 
-    // 成员变量，用于存储当前显示的联系人对象
     private Contact currentContact;
 
     public ContactCardView(@NonNull Context context) {
@@ -61,7 +61,6 @@ public class ContactCardView extends FrameLayout {
             return;
         }
 
-        // 更新各个UI元素显示联系人信息
         tvName.setText(currentContact.getName());
 
         // 更新手机号码，如果为空则隐藏
@@ -116,7 +115,6 @@ public class ContactCardView extends FrameLayout {
         inflater.inflate(R.layout.view_contact_card, this, true);
 
         // 找到布局中的各个 View 元素
-        //cardContactInfo = findViewById(R.id.card_contact_info);
         btnCall = findViewById(R.id.btn_call);
         btnMessage = findViewById(R.id.btn_message);
         btnShare = findViewById(R.id.btn_share);
@@ -177,7 +175,16 @@ public class ContactCardView extends FrameLayout {
         });
 
         fabEdit.setOnClickListener(v -> {
-            // TODO: 实现编辑联系人信息的逻辑
+            if (currentContact != null) {
+                // 启动编辑联系人页面
+                Intent intent = new Intent(getContext(), ContactEditActivity.class);
+                // 将当前联系人对象传递给编辑页面
+                intent.putExtra("contact", currentContact);
+                getContext().startActivity(intent);
+            } else {
+                android.widget.Toast.makeText(getContext(), "没有联系人可编辑", 
+                        android.widget.Toast.LENGTH_SHORT).show();
+            }
         });
 
         // 初始化时清空显示，或者显示默认占位符
@@ -206,3 +213,4 @@ public class ContactCardView extends FrameLayout {
     }
 
 }
+

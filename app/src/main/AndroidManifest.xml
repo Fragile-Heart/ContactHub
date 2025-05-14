@@ -27,6 +27,11 @@
         <activity
             android:name=".ui.contactDetail.ContactDetailActivity"
             android:exported="false" />
+            
+        <!-- 联系人编辑 Activity -->
+        <activity
+            android:name=".ui.contactDetail.ContactEditActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

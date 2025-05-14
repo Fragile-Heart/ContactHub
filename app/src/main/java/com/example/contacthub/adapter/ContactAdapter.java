@@ -24,11 +24,6 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         void onContactClick(Contact contact);
     }
 
-    // 设置点击监听器的方法
-    public void setOnContactClickListener(OnContactClickListener listener) {
-        this.listener = listener;
-    }
-
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Contact contact = contacts.get(position);
