@@ -7,6 +7,8 @@ import android.provider.MediaStore;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -20,8 +22,6 @@ import com.google.android.material.textfield.TextInputEditText;
 
 public class ContactEditActivity extends AppCompatActivity {
 
-    private static final int REQUEST_IMAGE_PICK = 1001;
-
     private ShapeableImageView editContactAvatar;
     private FloatingActionButton fabEditAvatar;
     private TextInputEditText etName, etMobile, etTelephone, etEmail, etAddress;
@@ -29,6 +29,17 @@ public class ContactEditActivity extends AppCompatActivity {
 
     private Contact contact;
     private Uri selectedImageUri;
+    
+    private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    selectedImageUri = result.getData().getData();
+                    if (selectedImageUri != null) {
+                        editContactAvatar.setImageURI(selectedImageUri);
+                    }
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,11 +72,11 @@ public class ContactEditActivity extends AppCompatActivity {
             setTitle("新建联系人");
         }
 
-        // 设置头像选择
+        // 设置头像选择 - 使用新的Activity Result API
         fabEditAvatar.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
-            startActivityForResult(intent, REQUEST_IMAGE_PICK);
+            imagePickerLauncher.launch(intent);
         });
 
         // 保存按钮点击
@@ -124,17 +135,6 @@ public class ContactEditActivity extends AppCompatActivity {
         
         Toast.makeText(this, "联系人已更新", Toast.LENGTH_SHORT).show();
         finish();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_PICK && resultCode == RESULT_OK && data != null) {
-            selectedImageUri = data.getData();
-            if (selectedImageUri != null) {
-                editContactAvatar.setImageURI(selectedImageUri);
-            }
-        }
     }
 
     @Override
