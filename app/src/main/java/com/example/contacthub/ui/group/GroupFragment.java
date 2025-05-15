@@ -40,6 +40,21 @@ public class GroupFragment extends Fragment {
         // 初始化文件工具类
         fileUtil = new FileUtil(requireContext());
 
+        // 加载数据并更新UI
+        loadDataAndUpdateUI();
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        // 在Fragment恢复可见状态时重新加载数据
+        // 确保当联系人数据被修改后，分组视图也能反映最新变化
+        loadDataAndUpdateUI();
+        Log.d("GroupFragment", "onResume: 重新加载分组数据");
+    }
+    
+    // 加载数据并更新UI的方法
+    private void loadDataAndUpdateUI() {
         // 加载数据
         List<Contact> contacts = loadContacts();
         List<Group> groups = loadGroups();

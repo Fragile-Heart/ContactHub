@@ -50,11 +50,8 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
         // 初始化文件工具类
         fileUtil = new FileUtil(requireContext());
 
-        allContacts = loadContactList();
-
-        contactMapByPinyin = ContactIndexer.groupByFirstLetter(allContacts);
-
-        updateContactList("");
+        // 加载联系人数据并更新UI
+        loadContactsAndUpdateUI();
 
         binding.editSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -70,7 +67,22 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
                 updateContactList(key);
             }
         });
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // 在Fragment恢复可见状态时重新加载联系人数据
+        // 这确保了当用户从编辑页面返回时，能看到最新的联系人数据
+        loadContactsAndUpdateUI();
+        Log.d("ContactListFragment", "onResume: 重新加载联系人数据");
+    }
+
+    // 加载联系人数据并更新UI的方法
+    private void loadContactsAndUpdateUI() {
+        allContacts = loadContactList();
+        contactMapByPinyin = ContactIndexer.groupByFirstLetter(allContacts);
+        updateContactList("");
     }
 
     //模糊搜索更新联系人列表

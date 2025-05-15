@@ -1,14 +1,18 @@
 package com.example.contacthub.widget;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -20,6 +24,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.imageview.ShapeableImageView;
 
 public class ContactCardView extends FrameLayout {
+
+    private static final String TAG = "ContactCardView";
+    private static final int EDIT_CONTACT_REQUEST_CODE = 100;
 
     private MaterialButton btnCall;
     private MaterialButton btnMessage;
@@ -34,6 +41,16 @@ public class ContactCardView extends FrameLayout {
     private ShapeableImageView contactAvatar;
 
     private Contact currentContact;
+    private OnContactUpdatedListener contactUpdatedListener;
+
+    // 回调接口用于通知联系人更新事件
+    public interface OnContactUpdatedListener {
+        void onContactUpdated(Contact updatedContact);
+    }
+
+    public void setOnContactUpdatedListener(OnContactUpdatedListener listener) {
+        this.contactUpdatedListener = listener;
+    }
 
     public ContactCardView(@NonNull Context context) {
         super(context);
@@ -48,6 +65,10 @@ public class ContactCardView extends FrameLayout {
     public ContactCardView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context, attrs);
+    }
+
+    public Contact getCurrentContact() {
+        return currentContact;
     }
 
     public void setContact(Contact contact) {
@@ -180,7 +201,15 @@ public class ContactCardView extends FrameLayout {
                 Intent intent = new Intent(getContext(), ContactEditActivity.class);
                 // 将当前联系人对象传递给编辑页面
                 intent.putExtra("contact", currentContact);
-                getContext().startActivity(intent);
+                
+                // 如果上下文是Activity，使用startActivityForResult
+                if (context instanceof Activity) {
+                    ((Activity) context).startActivityForResult(intent, EDIT_CONTACT_REQUEST_CODE);
+                } else {
+                    // 非Activity上下文直接启动，但无法接收返回结果
+                    context.startActivity(intent);
+                    Log.w(TAG, "编辑联系人：当前上下文不是Activity，无法接收编辑结果");
+                }
             } else {
                 android.widget.Toast.makeText(getContext(), "没有联系人可编辑", 
                         android.widget.Toast.LENGTH_SHORT).show();
@@ -188,14 +217,13 @@ public class ContactCardView extends FrameLayout {
         });
 
         // 初始化时清空显示，或者显示默认占位符
-        clearContactInfo(); // 添加一个清空信息的方法
+        clearContactInfo();
     }
 
     public void clearContactInfo() {
         this.currentContact = null; // 清除存储的联系人对象
 
         // 清空所有信息
-
         tvName.setText(""); // 清空姓名
         tvMobileNumber.setText(""); // 清空手机号码
         tvTelephoneNumber.setText(""); // 清空座机号码
@@ -212,5 +240,21 @@ public class ContactCardView extends FrameLayout {
         getContext().startActivity(intent);
     }
 
+    // 供宿主Activity调用，处理编辑结果
+    public void handleActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == EDIT_CONTACT_REQUEST_CODE && resultCode == Activity.RESULT_OK && data != null) {
+            Contact updatedContact = (Contact) data.getSerializableExtra("updatedContact");
+            if (updatedContact != null) {
+                // 更新当前显示的联系人
+                setContact(updatedContact);
+                
+                // 通知监听器联系人已更新
+                if (contactUpdatedListener != null) {
+                    contactUpdatedListener.onContactUpdated(updatedContact);
+                }
+                
+                Log.d(TAG, "联系人已更新: " + updatedContact.getName());
+            }
+        }
+    }
 }
-

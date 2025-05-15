@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -14,14 +15,20 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
+import com.example.contacthub.utils.FileUtil;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class ContactEditActivity extends AppCompatActivity {
 
+    private static final String TAG = "ContactEditActivity";
     private ShapeableImageView editContactAvatar;
     private FloatingActionButton fabEditAvatar;
     private TextInputEditText etName, etMobile, etTelephone, etEmail, etAddress;
@@ -29,6 +36,7 @@ public class ContactEditActivity extends AppCompatActivity {
 
     private Contact contact;
     private Uri selectedImageUri;
+    private FileUtil fileUtil;
     
     private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -45,6 +53,9 @@ public class ContactEditActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_edit);
+
+        // 初始化文件工具类
+        fileUtil = new FileUtil(this);
 
         // 初始化工具栏
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
@@ -124,9 +135,42 @@ public class ContactEditActivity extends AppCompatActivity {
         //     contact.setAvatarUri(selectedImageUri);
         // }
 
-        // 保存联系人到数据库
-        // 这部分需要根据您的应用程序架构实现
-        // contactRepository.save(contact);
+        // 保存联系人到文件
+        try {
+            // 读取现有联系人列表
+            Contact[] contacts = fileUtil.readJSON("contacts.json", Contact[].class);
+            List<Contact> contactList = new ArrayList<>(Arrays.asList(contacts));
+            
+            // 查找并更新联系人
+            boolean found = false;
+            for (int i = 0; i < contactList.size(); i++) {
+                if (contactList.get(i).getId().equals(contact.getId())) {
+                    contactList.set(i, contact);
+                    found = true;
+                    break;
+                }
+            }
+            
+            // 如果没找到，说明是新联系人，添加到列表
+            if (!found) {
+                contactList.add(contact);
+            }
+            
+            // 将更新后的列表转换为数组并保存
+            Contact[] updatedContacts = contactList.toArray(new Contact[0]);
+            String json = new com.google.gson.Gson().toJson(updatedContacts);
+            
+            // 保存到文件
+            java.io.FileOutputStream fos = openFileOutput("contacts.json", MODE_PRIVATE);
+            fos.write(json.getBytes());
+            fos.close();
+            
+            Log.d(TAG, "联系人保存成功");
+        } catch (Exception e) {
+            Log.e(TAG, "保存联系人失败", e);
+            Toast.makeText(this, "保存失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         // 将更新后的联系人传回
         Intent resultIntent = new Intent();
@@ -140,7 +184,8 @@ public class ContactEditActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
+            // 替换为 finish() 而不是调用已弃用的 onBackPressed()
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);

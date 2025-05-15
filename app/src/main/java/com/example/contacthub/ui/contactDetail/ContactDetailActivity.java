@@ -1,47 +1,85 @@
 package com.example.contacthub.ui.contactDetail;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
-import com.example.contacthub.databinding.FragmentContactBinding;
+import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
+import com.example.contacthub.widget.ContactCardView;
 
-public class ContactDetailActivity extends AppCompatActivity {
+public class ContactDetailActivity extends AppCompatActivity implements ContactCardView.OnContactUpdatedListener {
 
-    private FragmentContactBinding binding;
+    private ContactCardView contactCardView;
+    private Contact contact;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.fragment_contact);
 
-        // 使用 ViewBinding 绑定布局
-        binding = FragmentContactBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        // 修改为使用正确的Toolbar类型
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        // 设置工具栏
-        setSupportActionBar(binding.toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-        }
+        // 初始化联系人卡片视图
+        contactCardView = findViewById(R.id.contact_card_view);
+        contactCardView.setOnContactUpdatedListener(this);
 
-        // 工具栏返回按钮点击事件
-        binding.toolbar.setNavigationOnClickListener(v -> finish());
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        // 获取传递的 Contact 对象
-        Contact contact = (Contact) getIntent().getSerializableExtra("contact");
-        if (contact != null) {
-            displayContactInfo(contact);
+        // 获取传递过来的联系人
+        if (getIntent().hasExtra("contact")) {
+            contact = (Contact) getIntent().getSerializableExtra("contact");
+            displayContactDetails();
         } else {
-            // 处理未找到联系人信息的情况
+            Toast.makeText(this, "没有联系人信息", Toast.LENGTH_SHORT).show();
             finish();
         }
     }
 
-    private void displayContactInfo(Contact contact) {
-        // 直接使用ContactCardView设置联系人信息
-        binding.contactCardView.setContact(contact);
+    private void displayContactDetails() {
+        if (contact != null) {
+            // 在卡片视图中显示联系人详情
+            contactCardView.setContact(contact);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            // 使用 finish() 替代 onBackPressed()
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        // 将结果传递给ContactCardView处理
+        contactCardView.handleActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onContactUpdated(Contact updatedContact) {
+        // 联系人已更新，更新当前页面的联系人对象
+        this.contact = updatedContact;
+        
+        // 更新标题
+        setTitle(updatedContact.getName());
+        
+        // 将更新后的联系人传回给启动此Activity的页面
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("updatedContact", updatedContact);
+        setResult(RESULT_OK, resultIntent);
     }
 }
