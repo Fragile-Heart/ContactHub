@@ -6,13 +6,32 @@
     android:layout_height="match_parent"
     tools:context=".ui.group.GroupFragment">
 
+    <!-- 分组列表 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_groups"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:listitem="@android:layout/simple_list_item_1" />
+
+    <!-- 新增分组的悬浮按钮 -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="新增分组"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="#3F51B5"
+        app:tint="@color/white"
+        app:fabSize="normal"
+        app:maxImageSize="29dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -26,7 +26,6 @@ public class ContactDetailActivity extends AppCompatActivity implements ContactC
         // 修改为使用正确的Toolbar类型
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // 初始化联系人卡片视图
         contactCardView = findViewById(R.id.contact_card_view);

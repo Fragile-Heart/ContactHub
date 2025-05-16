@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -15,16 +18,20 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
+import com.example.contacthub.model.Group;
 import com.example.contacthub.utils.FileUtil;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ContactEditActivity extends AppCompatActivity {
 
@@ -33,10 +40,14 @@ public class ContactEditActivity extends AppCompatActivity {
     private FloatingActionButton fabEditAvatar;
     private TextInputEditText etName, etMobile, etTelephone, etEmail, etAddress;
     private MaterialButton btnSave, btnCancel;
+    private LinearLayout groupsContainer;
+    private MaterialCardView groupsCard;
 
     private Contact contact;
     private Uri selectedImageUri;
     private FileUtil fileUtil;
+    private List<Group> allGroups;
+    private Map<Integer, CheckBox> groupCheckboxes = new HashMap<>();
     
     private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -72,6 +83,11 @@ public class ContactEditActivity extends AppCompatActivity {
         etAddress = findViewById(R.id.et_address);
         btnSave = findViewById(R.id.btn_save);
         btnCancel = findViewById(R.id.btn_cancel);
+        groupsContainer = findViewById(R.id.groups_container);
+        groupsCard = findViewById(R.id.groups_card);
+
+        // 加载所有分组
+        loadGroups();
 
         // 获取传递过来的联系人
         if (getIntent().hasExtra("contact")) {
@@ -80,6 +96,7 @@ public class ContactEditActivity extends AppCompatActivity {
         } else {
             // 如果是新建联系人
             contact = new Contact();
+            contact.setGroupIds(new ArrayList<>());
             setTitle("新建联系人");
         }
 
@@ -97,6 +114,17 @@ public class ContactEditActivity extends AppCompatActivity {
         btnCancel.setOnClickListener(v -> finish());
     }
 
+    private void loadGroups() {
+        try {
+            Group[] groups = fileUtil.readJSON("groups.json", Group[].class);
+            allGroups = new ArrayList<>(Arrays.asList(groups));
+            Log.d(TAG, "加载分组成功: " + allGroups.size() + "个分组");
+        } catch (Exception e) {
+            Log.e(TAG, "加载分组失败", e);
+            allGroups = new ArrayList<>();
+        }
+    }
+
     private void populateContactInfo() {
         if (contact != null) {
             etName.setText(contact.getName());
@@ -105,12 +133,57 @@ public class ContactEditActivity extends AppCompatActivity {
             etEmail.setText(contact.getEmail());
             etAddress.setText(contact.getAddress());
 
+            // 创建分组选择UI
+            createGroupCheckboxes();
+
             // 如果联系人有头像，则显示
             // 注意：这里假设Contact类有获取和设置头像的方法
             // if (contact.getAvatarUri() != null) {
             //     editContactAvatar.setImageURI(contact.getAvatarUri());
             //     selectedImageUri = contact.getAvatarUri();
             // }
+        }
+    }
+
+    private void createGroupCheckboxes() {
+        // 清除现有的复选框
+        groupsContainer.removeAllViews();
+        groupCheckboxes.clear();
+        
+        // 如果没有分组数据，隐藏分组卡片
+        if (allGroups == null || allGroups.isEmpty()) {
+            groupsCard.setVisibility(View.GONE);
+            return;
+        }
+        
+        groupsCard.setVisibility(View.VISIBLE);
+        
+        // 获取联系人的分组ID列表
+        List<Integer> contactGroupIds = contact.getGroupIds();
+        if (contactGroupIds == null) {
+            contactGroupIds = new ArrayList<>();
+            contact.setGroupIds(contactGroupIds);
+        }
+        
+        // 为每个分组创建复选框
+        for (Group group : allGroups) {
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(group.getName());
+            checkBox.setChecked(contactGroupIds.contains(group.getId()));
+            
+            // 设置复选框边距
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(0, 8, 0, 8);
+            checkBox.setLayoutParams(params);
+            
+            // 保存复选框引用
+            groupCheckboxes.put(group.getId(), checkBox);
+            
+            // 添加到容器
+            groupsContainer.addView(checkBox);
         }
     }
 
@@ -129,6 +202,9 @@ public class ContactEditActivity extends AppCompatActivity {
         contact.setTelephoneNumber(etTelephone.getText().toString().trim());
         contact.setEmail(etEmail.getText().toString().trim());
         contact.setAddress(etAddress.getText().toString().trim());
+
+        // 更新联系人分组
+        updateContactGroups();
 
         // 设置头像
         // if (selectedImageUri != null) {
@@ -179,6 +255,22 @@ public class ContactEditActivity extends AppCompatActivity {
         
         Toast.makeText(this, "联系人已更新", Toast.LENGTH_SHORT).show();
         finish();
+    }
+
+    private void updateContactGroups() {
+        // 清空当前分组列表
+        List<Integer> selectedGroups = new ArrayList<>();
+        
+        // 遍历所有分组复选框，添加选中的分组ID
+        for (Map.Entry<Integer, CheckBox> entry : groupCheckboxes.entrySet()) {
+            if (entry.getValue().isChecked()) {
+                selectedGroups.add(entry.getKey());
+            }
+        }
+        
+        // 更新联系人的分组列表
+        contact.setGroupIds(selectedGroups);
+        Log.d(TAG, "更新联系人分组: " + selectedGroups);
     }
 
     @Override
