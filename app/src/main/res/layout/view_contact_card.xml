@@ -11,10 +11,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- 头像背景 -->
-
-        <!-- 联系人姓名 -->
-
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="220dp"

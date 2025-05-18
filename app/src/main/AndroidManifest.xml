@@ -22,12 +22,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
+
         <!-- 联系人详情 Activity -->
         <activity
             android:name=".ui.contactDetail.ContactDetailActivity"
             android:exported="false" />
-            
+
         <!-- 联系人编辑 Activity -->
         <activity
             android:name=".ui.contactDetail.ContactEditActivity"

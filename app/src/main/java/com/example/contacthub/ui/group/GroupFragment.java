@@ -209,8 +209,8 @@ public class GroupFragment extends Fragment {
                         int position = entry.getKey();
                         RectF buttonRect = entry.getValue();
 
-                        // 只有当位置是当前打开的项时，才允许触发删除操作
-                        if (position == currentOpenPosition && buttonRect.contains(e.getX(), e.getY())) {
+                        // 只有当位置是当前打开的项，并且是有效的索引范围时，才允许触发删除操作
+                        if (position == currentOpenPosition && position >= 0 && position < groups.size() && buttonRect.contains(e.getX(), e.getY())) {
                             // 用户点击了删除按钮
                             Group groupToDelete = groups.get(position);
                             showDeleteConfirmDialog(groupToDelete, position);
@@ -223,8 +223,8 @@ public class GroupFragment extends Fragment {
                         int position = entry.getKey();
                         RectF buttonRect = entry.getValue();
 
-                        // 只有当位置是当前打开的项时，才允许触发管理操作
-                        if (position == currentOpenPosition && buttonRect.contains(e.getX(), e.getY())) {
+                        // 只有当位置是当前打开的项，并且是有效的索引范围时，才允许触发管理操作
+                        if (position == currentOpenPosition && position >= 0 && position < groups.size() && buttonRect.contains(e.getX(), e.getY())) {
                             // 用户点击了管理按钮
                             Group groupToManage = groups.get(position);
                             showManageGroupDialog(groupToManage, position);
@@ -348,7 +348,9 @@ public class GroupFragment extends Fragment {
     // 删除分组
     private void deleteGroup(Group group, int position) {
         try {
-            // 从列表中移除
+            int groupIdToDelete = group.getId();
+
+            // 从列表中移除分组
             groups.remove(position);
             groupAdapter.notifyItemRemoved(position);
 
@@ -359,6 +361,31 @@ public class GroupFragment extends Fragment {
             FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
             fos.write(json.getBytes());
             fos.close();
+
+            // 更新联系人数据，移除已删除分组的引用
+            List<Contact> contacts = loadContacts();
+            boolean contactsUpdated = false;
+
+            for (Contact contact : contacts) {
+                List<Integer> groupIds = contact.getGroupIds();
+                if (groupIds != null && groupIds.contains(groupIdToDelete)) {
+                    // 从联系人的分组列表中移除此分组ID
+                    groupIds.remove(Integer.valueOf(groupIdToDelete));
+                    contactsUpdated = true;
+                }
+            }
+
+            // 如果有联系人被更新，保存联系人数据
+            if (contactsUpdated) {
+                Contact[] contactArray = contacts.toArray(new Contact[0]);
+                String contactsJson = new Gson().toJson(contactArray);
+
+                FileOutputStream contactsFos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);
+                contactsFos.write(contactsJson.getBytes());
+                contactsFos.close();
+
+                Log.d("GroupFragment", "已更新关联联系人的分组引用");
+            }
 
             Toast.makeText(requireContext(), "分组 '" + group.getName() + "' 已删除", Toast.LENGTH_SHORT).show();
             Log.d("GroupFragment", "分组已删除: " + group.getName() + ", ID: " + group.getId());
@@ -419,7 +446,7 @@ public class GroupFragment extends Fragment {
             }
 
             // 创建新分组对象 (使用空联系人列表和默认不展开状态)
-            Group newGroup = new Group(newId, new ArrayList<>(), false, groupName);
+            Group newGroup = new Group(newId, false, groupName);
             groups.add(newGroup);
 
             // 保存到文件

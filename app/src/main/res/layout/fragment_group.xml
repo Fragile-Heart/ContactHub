@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".ui.group.GroupFragment">
 
-    <!-- 分组列表 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_groups"
         android:layout_width="0dp"
@@ -19,7 +18,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@android:layout/simple_list_item_1" />
 
-    <!-- 新增分组的悬浮按钮 -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_group"
         android:layout_width="wrap_content"

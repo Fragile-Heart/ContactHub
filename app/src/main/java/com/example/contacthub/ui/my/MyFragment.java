@@ -12,15 +12,13 @@ import com.example.contacthub.widget.ContactCardView;
 
 public class MyFragment extends Fragment {
 
-    private ContactCardView contactCardView;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_my, container, false);
 
         // 获取ContactCardView引用
-        contactCardView = root.findViewById(R.id.contact_card_view);
+        ContactCardView contactCardView = root.findViewById(R.id.contact_card_view);
 
         // 创建联系人数据
         Contact contact = new Contact();
@@ -29,7 +27,10 @@ public class MyFragment extends Fragment {
         contact.setTelephoneNumber("010-12345678");
         contact.setEmail("zhangsan@example.com");
         contact.setAddress("北京市海淀区");
+        contactCardView.findViewById(R.id.btn_call).setVisibility(View.GONE);
+        contactCardView.findViewById(R.id.btn_message).setVisibility(View.GONE);
 
+        ((android.widget.Button) contactCardView.findViewById(R.id.btn_share)).setText("分享我的名片");
         // 显示联系人信息
         contactCardView.setContact(contact);
 

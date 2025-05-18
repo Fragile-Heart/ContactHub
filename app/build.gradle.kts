@@ -48,6 +48,8 @@ dependencies {
     implementation(libs.monitor)
     implementation(libs.tinypinyin)
     testImplementation(libs.junit)
+    implementation(libs.core)
+    implementation(libs.zxing.android.embedded)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }

@@ -6,17 +6,16 @@ import android.util.Log;
 import android.view.ViewGroup;
 
 import androidx.activity.OnBackPressedCallback;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.graphics.Insets;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.contacthub.databinding.ActivityMainBinding;
+
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,23 +28,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 启用沉浸式模式（设置在布局膨胀之前）
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.container, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+        // 适配状态栏
+        adjustTopBarToStatusBar();
 
-            // 为标题添加适当的顶部内边距
-            binding.tvTitle.setPadding(0, systemBars.top, 0, 0);
-            // 增加标题高度以适应状态栏
-            ViewGroup.LayoutParams params = binding.tvTitle.getLayoutParams();
-            params.height = systemBars.top + (int) getResources().getDimension(R.dimen.title_height);
-            binding.tvTitle.setLayoutParams(params);
+        // 设置二维码扫描按钮点击事件
+        binding.btnScanQrcode.setOnClickListener(v -> {
 
-            return insets;
+            //TODO: 扫描二维码
         });
 
         initializeData();
@@ -70,17 +62,43 @@ public class MainActivity extends AppCompatActivity {
                 // 什么都不做，防止重复导航添加到回退栈
             });
 
-            // 添加后退导航处理 (使用非弃用API)
+            // 添加后退导航处理
             getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
                 @Override
                 public void handleOnBackPressed() {
                     if (!navController.popBackStack()) {
-                        // 如果没有更多后退堆栈，则完成activity
                         finish();
                     }
                 }
             });
         }
+    }
+    
+    // 适配状态栏高度
+    private void adjustTopBarToStatusBar() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.tvTitle, (view, windowInsets) -> {
+            // 获取状态栏高度
+            int statusBarHeight = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+
+            // 调整顶部栏布局参数
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
+            params.height = getResources().getDimensionPixelSize(R.dimen.title_bar_height) + statusBarHeight;
+            // 设置顶部内边距，防止内容被状态栏遮挡
+            view.setPadding(view.getPaddingLeft(), statusBarHeight,
+                           view.getPaddingRight(), view.getPaddingBottom());
+            view.setLayoutParams(params);
+
+            // 同时调整扫描按钮的位置，确保垂直居中（相对于文本部分）
+           ViewGroup.MarginLayoutParams btnParams =
+                (ViewGroup.MarginLayoutParams) binding.btnScanQrcode.getLayoutParams();
+            // 设置顶部边距使按钮与标题文字对齐
+            btnParams.topMargin = statusBarHeight;
+            // 移除底部边距的设置，防止影响垂直居中
+            btnParams.bottomMargin = 0;
+            binding.btnScanQrcode.setLayoutParams(btnParams);
+
+            return windowInsets;
+        });
     }
 
     private void initializeData() {
@@ -108,3 +126,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
+

@@ -37,6 +37,20 @@ public class FileUtil {
         }
     }
 
+    // 新增方法：保存对象数组到文件
+    public <T> boolean saveJSON(T[] objects, String filename) {
+        try {
+            String json = gson.toJson(objects);
+            FileOutputStream fos = context.openFileOutput(filename, Context.MODE_PRIVATE);
+            fos.write(json.getBytes());
+            fos.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // 读取 - 获取整个JSON文件内容为Map
     public Map<String, Object> readJSONAsMap(String filename) {
         String json = readFile(filename);

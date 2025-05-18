@@ -1,20 +1,28 @@
 package com.example.contacthub.widget;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 
 import com.example.contacthub.ui.contactDetail.ContactEditActivity;
 import com.example.contacthub.R;
@@ -22,6 +30,22 @@ import com.example.contacthub.model.Contact;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class ContactCardView extends FrameLayout {
 
@@ -120,14 +144,6 @@ public class ContactCardView extends FrameLayout {
             tvAddress.setVisibility(View.GONE);
         }
 
-//        // 更新联系人头像（如果Contact类提供了头像）
-//        if (currentContact.getAvatarUri() != null) {
-//            // 假设Contact类有getAvatarUri方法
-//            // 可以使用Glide或Picasso等图片加载库来加载头像
-//            contactAvatar.setImageURI(currentContact.getAvatarUri());
-//        } else {
-//            contactAvatar.setImageResource(R.drawable.ic_person);
-//        }
         contactAvatar.setImageResource(R.drawable.ic_person);
     }
 
@@ -192,7 +208,13 @@ public class ContactCardView extends FrameLayout {
         });
 
         btnShare.setOnClickListener(v -> {
-            // TODO: 实现分享联系人信息的逻辑
+            if (currentContact != null) {
+                // 生成联系人信息的二维码并显示
+                generateAndShowQRCode();
+            } else {
+                Toast.makeText(getContext(), "没有联系人可分享", 
+                        Toast.LENGTH_SHORT).show();
+            }
         });
 
         fabEdit.setOnClickListener(v -> {
@@ -208,7 +230,7 @@ public class ContactCardView extends FrameLayout {
                 } else {
                     // 非Activity上下文直接启动，但无法接收返回结果
                     context.startActivity(intent);
-                    Log.w(TAG, "编辑联系人：当前上下文不是Activity，无法接收编辑结果");
+                    Log.w(TAG, "编辑联系人：当前上下文不是Activity���无法接收编辑结果");
                 }
             } else {
                 android.widget.Toast.makeText(getContext(), "没有联系人可编辑", 
@@ -255,6 +277,159 @@ public class ContactCardView extends FrameLayout {
                 
                 Log.d(TAG, "联系人已更新: " + updatedContact.getName());
             }
+        }
+    }
+
+    /**
+     * 生成联系人二维码并显示在对话框中
+     */
+    private void generateAndShowQRCode() {
+        try {
+            // 创建JSON对象存储联系人信息
+            JSONObject contactJson = new JSONObject();
+            contactJson.put("name", currentContact.getName() != null ? currentContact.getName() : "");
+            contactJson.put("mobileNumber", currentContact.getMobileNumber() != null ? currentContact.getMobileNumber() : "");
+            contactJson.put("telephoneNumber", currentContact.getTelephoneNumber() != null ? currentContact.getTelephoneNumber() : "");
+            contactJson.put("email", currentContact.getEmail() != null ? currentContact.getEmail() : "");
+            contactJson.put("address", currentContact.getAddress() != null ? currentContact.getAddress() : "");
+
+            // 生成二维码
+            Bitmap qrCodeBitmap = generateQRCode(contactJson.toString());
+            
+            if (qrCodeBitmap != null) {
+                // 显示包含二维码的对话框
+                showQRCodeDialog(qrCodeBitmap);
+            } else {
+                Toast.makeText(getContext(), "生成二维码失败", Toast.LENGTH_SHORT).show();
+            }
+        } catch (JSONException e) {
+            Toast.makeText(getContext(), "生成联系人信息失败: " + e.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "生成联系人JSON信息失败", e);
+        }
+    }
+
+    /**
+     * 生成包含给定内容的二维码
+     * @param content 要编码的内容
+     * @return 二维码位图
+     */
+    private Bitmap generateQRCode(String content) {
+        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+        try {
+            // 创建二维码的位矩阵，尺寸为600x600
+            BitMatrix bitMatrix = multiFormatWriter.encode(content, BarcodeFormat.QR_CODE, 600, 600);
+            
+            // 使用BarcodeEncoder将位矩阵转换为位图
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            return barcodeEncoder.createBitmap(bitMatrix);
+        } catch (WriterException e) {
+            Log.e(TAG, "生成二维码失败", e);
+            return null;
+        }
+    }
+
+    /**
+     * 显示包含二维码的对话框
+     * @param qrCodeBitmap 二维码位图
+     */
+    private void showQRCodeDialog(Bitmap qrCodeBitmap) {
+        // 创建对话框布局
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_qr_code, null);
+        
+        // 设置二维码图片
+        ImageView imgQrCode = dialogView.findViewById(R.id.img_qr_code);
+        imgQrCode.setImageBitmap(qrCodeBitmap);
+        
+        // 设置标题
+        TextView tvDialogTitle = dialogView.findViewById(R.id.tv_dialog_title);
+        tvDialogTitle.setText("扫描二维码添加 " + currentContact.getName() + " 的联系信息");
+        
+        // 创建对话框
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setView(dialogView)
+                .create();
+        
+        // 设置保存按钮点击事件
+        dialogView.findViewById(R.id.btn_save_qr_code).setOnClickListener(v -> {
+            saveQRCodeToGallery(qrCodeBitmap);
+        });
+        
+        // 设置关闭按钮点击事件
+        dialogView.findViewById(R.id.btn_close).setOnClickListener(v -> {
+            dialog.dismiss();
+        });
+        
+        // 显示对话框
+        dialog.show();
+    }
+
+    /**
+     * 保存二维码到相册
+     * @param bitmap 要保存的二维码位图
+     */
+    private void saveQRCodeToGallery(Bitmap bitmap) {
+        String fileName = "联系人_" + currentContact.getName() + "_" 
+                + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".png";
+        
+        // 根据Android版本使用不同的保存方法
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            saveImageWithMediaStore(bitmap, fileName);
+        } else {
+            saveImageToLegacyStorage(bitmap, fileName);
+        }
+    }
+
+    /**
+     * 使用MediaStore API保存图片（Android 10及以上）
+     */
+    private void saveImageWithMediaStore(Bitmap bitmap, String fileName) {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ContactHub");
+        
+        Uri uri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        if (uri != null) {
+            try (OutputStream out = getContext().getContentResolver().openOutputStream(uri)) {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                Toast.makeText(getContext(), "二维码已保存到相册", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                Toast.makeText(getContext(), "保存失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "保存二维码失败", e);
+            }
+        } else {
+            Toast.makeText(getContext(), "无法创建文件", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 保存图片到旧版存储（Android 9及以下）
+     */
+    private void saveImageToLegacyStorage(Bitmap bitmap, String fileName) {
+        try {
+            File directory = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES), "ContactHub");
+            
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+            
+            File file = new File(directory, fileName);
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+            out.close();
+            
+            // 通知媒体扫描器扫描新图片
+            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            mediaScanIntent.setData(Uri.fromFile(file));
+            getContext().sendBroadcast(mediaScanIntent);
+            
+            Toast.makeText(getContext(), "二维码已保存到相册", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Toast.makeText(getContext(), "保存失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "保存二维码失败", e);
         }
     }
 }

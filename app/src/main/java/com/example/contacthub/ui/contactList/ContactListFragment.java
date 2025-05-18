@@ -1,5 +1,6 @@
 package com.example.contacthub.ui.contactList;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -17,6 +18,7 @@ import com.example.contacthub.adapter.ContactAdapter;
 import com.example.contacthub.adapter.ContactSortByPinyinAdapter;
 import com.example.contacthub.databinding.FragmentContactListBinding;
 import com.example.contacthub.model.Contact;
+import com.example.contacthub.ui.contactDetail.ContactEditActivity;
 import com.example.contacthub.utils.ContactIndexer;
 import com.example.contacthub.utils.FileUtil;
 import com.example.contacthub.widget.AlphabetIndexView;
@@ -28,6 +30,7 @@ import java.util.Map;
 
 public class ContactListFragment extends Fragment implements AlphabetIndexView.OnLetterSelectedListener {
 
+    private static final int REQUEST_ADD_CONTACT = 1001;
     private FragmentContactListBinding binding;
     private FileUtil fileUtil;
     private List<Contact> allContacts;
@@ -66,6 +69,11 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
                 // 更新联系人列表
                 updateContactList(key);
             }
+        });
+
+        // 添加FAB点击事件，用于新建联系人
+        binding.fabAddGroup.setOnClickListener(v -> {
+            addNewContact();
         });
     }
 
@@ -119,12 +127,79 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
         }
     }
 
+    // 添加新联系人的方法
+    private void addNewContact() {
+        // 创建一个空白的联系人对象
+        Contact newContact = new Contact();
+
+        // 设置默认值
+        newContact.setName("");
+        newContact.setMobileNumber("");
+        newContact.setTelephoneNumber("");
+        newContact.setEmail("");
+        newContact.setAddress("");
+
+        // 生成拼音信息（虽然为空）
+        newContact.generatePinyin();
+
+        // 启动编辑页面
+        Intent intent = new Intent(requireContext(), ContactEditActivity.class);
+        intent.putExtra("contact", newContact);
+        intent.putExtra("isNewContact", true); // 标记为新建联系人
+        startActivityForResult(intent, REQUEST_ADD_CONTACT);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_ADD_CONTACT && resultCode == getActivity().RESULT_OK && data != null) {
+            // 获取更新后的联系人
+            Contact updatedContact = (Contact) data.getSerializableExtra("updatedContact");
+            if (updatedContact != null) {
+                // 保存新联系人并刷新列表
+                saveNewContact(updatedContact);
+            }
+        }
+    }
+
+    // 保存新联系人
+    private void saveNewContact(Contact newContact) {
+        // 为新联系人生成ID
+        if (newContact.getId() == null) {
+            // 找出当前最大ID并加1
+            int maxId = 0;
+            for (Contact contact : allContacts) {
+                if (contact.getId() != null && contact.getId() > maxId) {
+                    maxId = contact.getId();
+                }
+            }
+            newContact.setId(maxId + 1);
+        }
+
+        // 将新联系人添加到列表
+        List<Contact> updatedContacts = new ArrayList<>(allContacts);
+        updatedContacts.add(newContact);
+
+        // 保存到文件
+        try {
+            Contact[] contactsArray = updatedContacts.toArray(new Contact[0]);
+            fileUtil.saveJSON(contactsArray, "contacts.json");
+            Log.d("ContactListFragment", "新联系人已保存: " + newContact.getName());
+
+            // 重新加载列表
+            loadContactsAndUpdateUI();
+        } catch (Exception e) {
+            Log.e("ContactListFragment", "保存新联系人失败", e);
+        }
+    }
+
     @Override
     public void onLetterSelected(String letter) {
         ContactSortByPinyinAdapter adapter = (ContactSortByPinyinAdapter) binding.recyclerContactList.getAdapter();
-//
+
         Map<String,Integer> sectionIndexer = adapter.getSectionIndexer();
-//
+
         Integer position = sectionIndexer.get(letter);
         if (position != null) {
             binding.recyclerContactList.scrollToPosition(position);
