@@ -1,6 +1,7 @@
 [versions]
 agp = "8.8.2"
 core = "3.4.1"
+coreVersion = "3.5.2"
 gson = "2.10.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -18,6 +19,7 @@ zxingAndroidEmbedded = "4.2.0"
 
 [libraries]
 core = { module = "com.google.zxing:core", version.ref = "core" }
+core-v352 = { module = "com.google.zxing:core", version.ref = "coreVersion" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

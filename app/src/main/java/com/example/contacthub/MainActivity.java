@@ -1,12 +1,18 @@
 package com.example.contacthub;
 
+
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
-
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -15,7 +21,12 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.contacthub.databinding.ActivityMainBinding;
+import com.example.contacthub.model.Contact;
+import com.example.contacthub.ui.contactDetail.ContactEditActivity;
+import com.example.contacthub.utils.QRCodeUtils;
+import com.journeyapps.barcodescanner.ScanOptions;
 
+import org.json.JSONException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,6 +34,32 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+    private static final String TAG = "MainActivity";
+    private QRCodeUtils qrCodeUtils;
+    private final ActivityResultLauncher<Intent> selectImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Uri selectedImageUri = result.getData().getData();
+                    if (selectedImageUri != null) {
+                        processQRCodeImage(selectedImageUri);
+                    }
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<ScanOptions> qrCodeScanLauncher = QRCodeUtils.createQRScannerLauncher(
+            this, new QRCodeUtils.QRScanResultCallback() {
+                @Override
+                public void onScanSuccess(String qrContent) {
+                    processQRCodeResult(qrContent);
+                }
+
+                @Override
+                public void onScanCancelled() {
+                    Toast.makeText(MainActivity.this, "扫描取消", Toast.LENGTH_SHORT).show();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,13 +68,27 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // 初始化QRCodeUtils实例
+        qrCodeUtils = new QRCodeUtils(this);
+
         // 适配状态栏
         adjustTopBarToStatusBar();
 
         // 设置二维码扫描按钮点击事件
         binding.btnScanQrcode.setOnClickListener(v -> {
-
-            //TODO: 扫描二维码
+            // 显示选择对话框：相机或相册
+            new AlertDialog.Builder(this)
+                    .setTitle("选择扫描方式")
+                    .setItems(new CharSequence[]{"使用相机扫描", "从相册选择图片"}, (dialog, which) -> {
+                        if (which == 0) {
+                            // 使用相机扫描
+                            qrCodeUtils.launchQRCodeScanner(qrCodeScanLauncher);
+                        } else {
+                            // 从相册选择
+                            openGallery();
+                        }
+                    })
+                    .show();
         });
 
         initializeData();
@@ -73,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
-    
+
     // 适配状态栏高度
     private void adjustTopBarToStatusBar() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.tvTitle, (view, windowInsets) -> {
@@ -125,5 +176,44 @@ public class MainActivity extends AppCompatActivity {
             Log.e("MainActivity", "初始化分组数据失败", e);
         }
     }
-}
 
+    /**
+     * 打开图库选择二维码图片
+     */
+    private void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        selectImageLauncher.launch(intent);
+    }
+
+    /**
+     * 处理从图库选择的二维码图片
+     */
+    private void processQRCodeImage(Uri imageUri) {
+        String qrCodeResult = qrCodeUtils.decodeQRCodeFromUri(imageUri);
+        if (qrCodeResult != null) {
+            processQRCodeResult(qrCodeResult);
+        } else {
+            Toast.makeText(this, "无法识别图片中的二维码", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 处理二维码扫描结果
+     */
+    private void processQRCodeResult(String qrContent) {
+        try {
+            Contact newContact = qrCodeUtils.jsonToContact(qrContent);
+            newContact.generateNewId(this);
+
+            Intent intent = new Intent(this, ContactEditActivity.class);
+            intent.putExtra("contact", newContact);
+            startActivity(intent);
+
+            Toast.makeText(this, "已扫描联系人信息，请补充完善", Toast.LENGTH_SHORT).show();
+        } catch (JSONException e) {
+            Log.e(TAG, "二维码内容不是有效的JSON格式", e);
+            Toast.makeText(this, "无效的二维码格式", Toast.LENGTH_SHORT).show();
+        }
+    }
+}

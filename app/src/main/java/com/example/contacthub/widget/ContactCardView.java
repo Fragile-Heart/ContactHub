@@ -27,17 +27,10 @@ import androidx.appcompat.app.AlertDialog;
 import com.example.contacthub.ui.contactDetail.ContactEditActivity;
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
+import com.example.contacthub.utils.QRCodeUtils;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.imageview.ShapeableImageView;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.journeyapps.barcodescanner.BarcodeEncoder;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -63,6 +56,8 @@ public class ContactCardView extends FrameLayout {
     private TextView tvEmail;
     private TextView tvAddress;
     private ShapeableImageView contactAvatar;
+
+    private QRCodeUtils qrCodeUtils;  // QRCodeUtils实例
 
     private Contact currentContact;
     private OnContactUpdatedListener contactUpdatedListener;
@@ -151,6 +146,9 @@ public class ContactCardView extends FrameLayout {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.view_contact_card, this, true);
 
+        // 初始化QRCodeUtils实例
+        qrCodeUtils = new QRCodeUtils(context);
+
         // 找到布局中的各个 View 元素
         btnCall = findViewById(R.id.btn_call);
         btnMessage = findViewById(R.id.btn_message);
@@ -230,7 +228,7 @@ public class ContactCardView extends FrameLayout {
                 } else {
                     // 非Activity上下文直接启动，但无法接收返回结果
                     context.startActivity(intent);
-                    Log.w(TAG, "编辑联系人：当前上下文不是Activity���无法接收编辑结果");
+                    Log.w(TAG, "编辑联系人：当前上下文不是Activity，无法接收编辑结果");
                 }
             } else {
                 android.widget.Toast.makeText(getContext(), "没有联系人可编辑", 
@@ -285,16 +283,8 @@ public class ContactCardView extends FrameLayout {
      */
     private void generateAndShowQRCode() {
         try {
-            // 创建JSON对象存储联系人信息
-            JSONObject contactJson = new JSONObject();
-            contactJson.put("name", currentContact.getName() != null ? currentContact.getName() : "");
-            contactJson.put("mobileNumber", currentContact.getMobileNumber() != null ? currentContact.getMobileNumber() : "");
-            contactJson.put("telephoneNumber", currentContact.getTelephoneNumber() != null ? currentContact.getTelephoneNumber() : "");
-            contactJson.put("email", currentContact.getEmail() != null ? currentContact.getEmail() : "");
-            contactJson.put("address", currentContact.getAddress() != null ? currentContact.getAddress() : "");
-
-            // 生成二维码
-            Bitmap qrCodeBitmap = generateQRCode(contactJson.toString());
+            // 使用QRCodeUtils实例生成联系人二维码
+            Bitmap qrCodeBitmap = qrCodeUtils.generateContactQRCode(currentContact, 600);
             
             if (qrCodeBitmap != null) {
                 // 显示包含二维码的对话框
@@ -302,30 +292,10 @@ public class ContactCardView extends FrameLayout {
             } else {
                 Toast.makeText(getContext(), "生成二维码失败", Toast.LENGTH_SHORT).show();
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Toast.makeText(getContext(), "生成联系人信息失败: " + e.getMessage(), 
                     Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "生成联系人JSON信息失败", e);
-        }
-    }
-
-    /**
-     * 生成包含给定内容的二维码
-     * @param content 要编码的内容
-     * @return 二维码位图
-     */
-    private Bitmap generateQRCode(String content) {
-        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
-        try {
-            // 创建二维码的位矩阵，尺寸为600x600
-            BitMatrix bitMatrix = multiFormatWriter.encode(content, BarcodeFormat.QR_CODE, 600, 600);
-            
-            // 使用BarcodeEncoder将位矩阵转换为位图
-            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            return barcodeEncoder.createBitmap(bitMatrix);
-        } catch (WriterException e) {
-            Log.e(TAG, "生成二维码失败", e);
-            return null;
+            Log.e(TAG, "生成联系人二维码失败", e);
         }
     }
 

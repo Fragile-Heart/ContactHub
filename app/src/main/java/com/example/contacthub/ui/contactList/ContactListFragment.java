@@ -12,6 +12,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.contacthub.adapter.ContactAdapter;
@@ -30,11 +32,32 @@ import java.util.Map;
 
 public class ContactListFragment extends Fragment implements AlphabetIndexView.OnLetterSelectedListener {
 
-    private static final int REQUEST_ADD_CONTACT = 1001;
     private FragmentContactListBinding binding;
     private FileUtil fileUtil;
     private List<Contact> allContacts;
     Map<String, List<Contact>> contactMapByPinyin;
+
+    private ActivityResultLauncher<Intent> addContactLauncher;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 注册 ActivityResultLauncher
+        addContactLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null) {
+                    // 获取更新后的联系人
+                    Contact updatedContact = (Contact) result.getData().getSerializableExtra("updatedContact");
+                    if (updatedContact != null) {
+                        // 保存新联系人并刷新列表
+                        saveNewContact(updatedContact);
+                    }
+                }
+            }
+        );
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -142,25 +165,11 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
         // 生成拼音信息（虽然为空）
         newContact.generatePinyin();
 
-        // 启动编辑页面
+        // 启动编辑页面，使用新的 ActivityResultLauncher
         Intent intent = new Intent(requireContext(), ContactEditActivity.class);
         intent.putExtra("contact", newContact);
         intent.putExtra("isNewContact", true); // 标记为新建联系人
-        startActivityForResult(intent, REQUEST_ADD_CONTACT);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_ADD_CONTACT && resultCode == getActivity().RESULT_OK && data != null) {
-            // 获取更新后的联系人
-            Contact updatedContact = (Contact) data.getSerializableExtra("updatedContact");
-            if (updatedContact != null) {
-                // 保存新联系人并刷新列表
-                saveNewContact(updatedContact);
-            }
-        }
+        addContactLauncher.launch(intent);
     }
 
     // 保存新联系人
@@ -176,6 +185,9 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
             }
             newContact.setId(maxId + 1);
         }
+
+        // 确保重新生成拼音信息
+        newContact.generatePinyin();
 
         // 将新联系人添加到列表
         List<Contact> updatedContacts = new ArrayList<>(allContacts);

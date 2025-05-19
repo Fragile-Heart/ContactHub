@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -14,6 +15,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        manifestPlaceholders["android.max_aspect"] = "2.1"
     }
 
     buildTypes {
@@ -48,8 +51,13 @@ dependencies {
     implementation(libs.monitor)
     implementation(libs.tinypinyin)
     testImplementation(libs.junit)
-    implementation(libs.core)
-    implementation(libs.zxing.android.embedded)
+
+    // 直接指定zxing-android-embedded的依赖
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0") {
+        exclude(group = "com.google.zxing", module = "core")
+    }
+    implementation(libs.core.v352)
+    
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }

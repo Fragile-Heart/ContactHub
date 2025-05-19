@@ -43,7 +43,6 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         });
     }
 
-
     public ContactAdapter(List<Contact> contacts) {
         this.contacts = contacts;
     }

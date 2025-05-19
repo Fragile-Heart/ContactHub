@@ -433,40 +433,33 @@ public class GroupFragment extends Fragment {
 
     // 添加新分组
     private void addNewGroup(String groupName) {
-        try {
-            // 读取现有分组
-            List<Group> groups = new ArrayList<>(loadGroups());
+      try {
+                // 创建新分组对象 (使用默认ID 0，后续会生成正确的ID)
+                Group newGroup = new Group(0, false, groupName);
+                newGroup.generateNewId(requireContext());
 
-            // 生成新ID (取现有最大ID + 1)
-            int newId = 1;
-            for (Group group : groups) {
-                if (group.getId() >= newId) {
-                    newId = group.getId() + 1;
-                }
+                // 读取现有分组并添加新分组
+                List<Group> groups = new ArrayList<>(loadGroups());
+                groups.add(newGroup);
+
+                // 保存到文件
+                Group[] groupArray = groups.toArray(new Group[0]);
+                String json = new Gson().toJson(groupArray);
+
+                FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
+                fos.write(json.getBytes());
+                fos.close();
+
+                // 刷新UI显示新的分组
+                loadDataAndUpdateUI();
+
+                Toast.makeText(requireContext(), "分组 '" + groupName + "' 创建成功", Toast.LENGTH_SHORT).show();
+                Log.d("GroupFragment", "新分组已创建: " + groupName + ", ID: " + newGroup.getId());
+            } catch (Exception e) {
+                Log.e("GroupFragment", "创建分组失败", e);
+                Toast.makeText(requireContext(), "创建分组失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
-
-            // 创建新分组对象 (使用空联系人列表和默认不展开状态)
-            Group newGroup = new Group(newId, false, groupName);
-            groups.add(newGroup);
-
-            // 保存到文件
-            Group[] groupArray = groups.toArray(new Group[0]);
-            String json = new Gson().toJson(groupArray);
-
-            FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
-            fos.write(json.getBytes());
-            fos.close();
-
-            // 刷新UI显示新的分组
-            loadDataAndUpdateUI();
-
-            Toast.makeText(requireContext(), "分组 '" + groupName + "' 创建成功", Toast.LENGTH_SHORT).show();
-            Log.d("GroupFragment", "新分组已创建: " + groupName + ", ID: " + newId);
-        } catch (Exception e) {
-            Log.e("GroupFragment", "创建分组失败", e);
-            Toast.makeText(requireContext(), "创建分组失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
+      }
 
     // 加载数据并更新UI的方法
     private void loadDataAndUpdateUI() {

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class ContactIndexer {
             if (!letterGroups.containsKey(letter)) {
                 letterGroups.put(letter, new ArrayList<>());
             }
-            letterGroups.get(letter).add(contact);
+            Objects.requireNonNull(letterGroups.get(letter)).add(contact);
         }
 
         return letterGroups;
@@ -77,12 +78,8 @@ public class ContactIndexer {
                     }
 
                     // 4. 匹配拼音首字母串
-                    if (contact.getFirstLetter() != null &&
-                            contact.getFirstLetter().toLowerCase().contains(lowercaseKeyword)) {
-                        return true;
-                    }
-
-                    return false;
+                    return contact.getFirstLetter() != null &&
+                            contact.getFirstLetter().toLowerCase().contains(lowercaseKeyword);
                 })
                 .collect(Collectors.toList());
     }
