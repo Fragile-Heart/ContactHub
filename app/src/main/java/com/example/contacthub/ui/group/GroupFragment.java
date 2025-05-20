@@ -476,7 +476,7 @@ public class GroupFragment extends Fragment {
     // 从JSON文件加载联系人数据
     private List<Contact> loadContacts() {
         try {
-            Contact[] contacts = fileUtil.readJSON("contacts.json", Contact[].class);
+            Contact[] contacts = fileUtil.readFile("contacts.json", Contact[].class);
             return Arrays.asList(contacts);
         } catch (Exception e) {
             Log.e("GroupFragment", "加载联系人失败", e);
@@ -487,7 +487,7 @@ public class GroupFragment extends Fragment {
     // 从JSON文件加载分组数据
     private List<Group> loadGroups() {
         try {
-            Group[] groups = fileUtil.readJSON("groups.json", Group[].class);
+            Group[] groups = fileUtil.readFile("groups.json", Group[].class);
             return Arrays.asList(groups);
         } catch (Exception e) {
             Log.e("HomeFragment", "加载分组失败", e);

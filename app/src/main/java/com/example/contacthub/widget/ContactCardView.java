@@ -18,8 +18,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -27,7 +25,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.example.contacthub.ui.contactDetail.ContactEditActivity;
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
-import com.example.contacthub.utils.QRCodeUtils;
+import com.example.contacthub.utils.QRCodeUtil;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.imageview.ShapeableImageView;
@@ -57,7 +55,7 @@ public class ContactCardView extends FrameLayout {
     private TextView tvAddress;
     private ShapeableImageView contactAvatar;
 
-    private QRCodeUtils qrCodeUtils;  // QRCodeUtils实例
+    private QRCodeUtil qrCodeUtil;  // QRCodeUtils实例
 
     private Contact currentContact;
     private OnContactUpdatedListener contactUpdatedListener;
@@ -147,7 +145,7 @@ public class ContactCardView extends FrameLayout {
         inflater.inflate(R.layout.view_contact_card, this, true);
 
         // 初始化QRCodeUtils实例
-        qrCodeUtils = new QRCodeUtils(context);
+        qrCodeUtil = new QRCodeUtil(context);
 
         // 找到布局中的各个 View 元素
         btnCall = findViewById(R.id.btn_call);
@@ -210,7 +208,7 @@ public class ContactCardView extends FrameLayout {
                 // 生成联系人信息的二维码并显示
                 generateAndShowQRCode();
             } else {
-                Toast.makeText(getContext(), "没有联系人可分享", 
+                Toast.makeText(getContext(), "没有联系人可分享",
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -221,7 +219,7 @@ public class ContactCardView extends FrameLayout {
                 Intent intent = new Intent(getContext(), ContactEditActivity.class);
                 // 将当前联系人对象传递给编辑页面
                 intent.putExtra("contact", currentContact);
-                
+
                 // 如果上下文是Activity，使用startActivityForResult
                 if (context instanceof Activity) {
                     ((Activity) context).startActivityForResult(intent, EDIT_CONTACT_REQUEST_CODE);
@@ -231,7 +229,7 @@ public class ContactCardView extends FrameLayout {
                     Log.w(TAG, "编辑联系人：当前上下文不是Activity，无法接收编辑结果");
                 }
             } else {
-                android.widget.Toast.makeText(getContext(), "没有联系人可编辑", 
+                android.widget.Toast.makeText(getContext(), "没有联系人可编辑",
                         android.widget.Toast.LENGTH_SHORT).show();
             }
         });
@@ -284,7 +282,7 @@ public class ContactCardView extends FrameLayout {
     private void generateAndShowQRCode() {
         try {
             // 使用QRCodeUtils实例生成联系人二维码
-            Bitmap qrCodeBitmap = qrCodeUtils.generateContactQRCode(currentContact, 600);
+            Bitmap qrCodeBitmap = qrCodeUtil.generateContactQRCode(currentContact, 600);
             
             if (qrCodeBitmap != null) {
                 // 显示包含二维码的对话框

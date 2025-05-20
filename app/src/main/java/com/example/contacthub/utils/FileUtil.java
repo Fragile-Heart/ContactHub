@@ -33,7 +33,7 @@ public class FileUtil {
     }
 
     // 读取 - 获取JSON文件作为特定对象
-    public <T> T readJSON(String filename, Class<T> classOfT) {
+    public <T> T readFile(String filename, Class<T> classOfT) {
         String json = readFile(filename);
         if (json == null) {
             return null;
@@ -41,8 +41,8 @@ public class FileUtil {
         return gson.fromJson(json, classOfT);
     }
 
-    // 辅助方法 - 读取文件内容
-    private String readFile(String filename) {
+    //  读取文件内容
+    public String readFile(String filename) {
         try {
             FileInputStream fis = context.openFileInput(filename);
             InputStreamReader isr = new InputStreamReader(fis);

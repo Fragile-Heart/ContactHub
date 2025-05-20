@@ -4,9 +4,14 @@ package com.example.contacthub;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowInsetsController;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -23,19 +28,20 @@ import androidx.navigation.ui.NavigationUI;
 import com.example.contacthub.databinding.ActivityMainBinding;
 import com.example.contacthub.model.Contact;
 import com.example.contacthub.ui.contactDetail.ContactEditActivity;
-import com.example.contacthub.utils.QRCodeUtils;
+import com.example.contacthub.utils.QRCodeUtil;
 import com.journeyapps.barcodescanner.ScanOptions;
 
 import org.json.JSONException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private static final String TAG = "MainActivity";
-    private QRCodeUtils qrCodeUtils;
+    private QRCodeUtil qrCodeUtil;
     private final ActivityResultLauncher<Intent> selectImageLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -48,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
             }
     );
 
-    private final ActivityResultLauncher<ScanOptions> qrCodeScanLauncher = QRCodeUtils.createQRScannerLauncher(
-            this, new QRCodeUtils.QRScanResultCallback() {
+    private final ActivityResultLauncher<ScanOptions> qrCodeScanLauncher = QRCodeUtil.createQRScannerLauncher(
+            this, new QRCodeUtil.QRScanResultCallback() {
                 @Override
                 public void onScanSuccess(String qrContent) {
                     processQRCodeResult(qrContent);
@@ -68,8 +74,23 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // 初始化QRCodeUtils实例
-        qrCodeUtils = new QRCodeUtils(this);
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+        window.setStatusBarColor(androidx.core.content.ContextCompat.getColor(this, R.color.status_bar_color));
+
+        // 设置状态栏图标为暗色
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+, 使用WindowInsetsController
+            Objects.requireNonNull(window.getInsetsController()).setSystemBarsAppearance(
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+        } else {
+            // Android 6.0 - 10
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+
+        qrCodeUtil = new QRCodeUtil(this);
 
         // 适配状态栏
         adjustTopBarToStatusBar();
@@ -82,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                     .setItems(new CharSequence[]{"使用相机扫描", "从相册选择图片"}, (dialog, which) -> {
                         if (which == 0) {
                             // 使用相机扫描
-                            qrCodeUtils.launchQRCodeScanner(qrCodeScanLauncher);
+                            qrCodeUtil.launchQRCodeScanner(qrCodeScanLauncher);
                         } else {
                             // 从相册选择
                             openGallery();
@@ -190,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
      * 处理从图库选择的二维码图片
      */
     private void processQRCodeImage(Uri imageUri) {
-        String qrCodeResult = qrCodeUtils.decodeQRCodeFromUri(imageUri);
+        String qrCodeResult = qrCodeUtil.decodeQRCodeFromUri(imageUri);
         if (qrCodeResult != null) {
             processQRCodeResult(qrCodeResult);
         } else {
@@ -203,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void processQRCodeResult(String qrContent) {
         try {
-            Contact newContact = qrCodeUtils.jsonToContact(qrContent);
+            Contact newContact = qrCodeUtil.jsonToContact(qrContent);
             newContact.generateNewId(this);
 
             Intent intent = new Intent(this, ContactEditActivity.class);

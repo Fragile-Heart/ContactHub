@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.contacthub.R;
@@ -116,7 +115,7 @@ public class ContactEditActivity extends AppCompatActivity {
 
     private void loadGroups() {
         try {
-            Group[] groups = fileUtil.readJSON("groups.json", Group[].class);
+            Group[] groups = fileUtil.readFile("groups.json", Group[].class);
             allGroups = new ArrayList<>(Arrays.asList(groups));
             Log.d(TAG, "加载分组成功: " + allGroups.size() + "个分组");
         } catch (Exception e) {
@@ -214,7 +213,7 @@ public class ContactEditActivity extends AppCompatActivity {
         // 保存联系人到文件
         try {
             // 读取现有联系人列表
-            Contact[] contacts = fileUtil.readJSON("contacts.json", Contact[].class);
+            Contact[] contacts = fileUtil.readFile("contacts.json", Contact[].class);
             List<Contact> contactList = new ArrayList<>(Arrays.asList(contacts));
             
             // 查找并更新联系人

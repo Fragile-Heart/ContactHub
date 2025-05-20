@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
-public class QRCodeUtils {
+public class QRCodeUtil {
     private static final String TAG = "QRCodeUtils";
     private final Context context;
 
@@ -43,7 +43,7 @@ public class QRCodeUtils {
      * 构造函数
      * @param context 应用上下文
      */
-    public QRCodeUtils(Context context) {
+    public QRCodeUtil(Context context) {
         this.context = context;
     }
 

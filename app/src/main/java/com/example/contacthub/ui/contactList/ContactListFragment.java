@@ -141,7 +141,7 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
     private List<Contact> loadContactList()
     {
         try {
-            Contact[] contacts = fileUtil.readJSON("contacts.json", Contact[].class);
+            Contact[] contacts = fileUtil.readFile("contacts.json", Contact[].class);
             return Arrays.asList(contacts);
         }catch (Exception e)
         {
