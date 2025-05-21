@@ -25,6 +25,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.example.contacthub.ui.contactDetail.ContactEditActivity;
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
+import com.example.contacthub.utils.PhotoUtil;
 import com.example.contacthub.utils.QRCodeUtil;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -137,7 +138,20 @@ public class ContactCardView extends FrameLayout {
             tvAddress.setVisibility(View.GONE);
         }
 
-        contactAvatar.setImageResource(R.drawable.ic_person);
+        String photoBase64 = currentContact.getPhoto();
+        if (photoBase64 != null && !photoBase64.isEmpty()) {
+            // 使用PhotoUtil将Base64字符串转换为Bitmap
+            Bitmap avatarBitmap = PhotoUtil.base64ToBitmap(photoBase64);
+            if (avatarBitmap != null) {
+                contactAvatar.setImageBitmap(avatarBitmap);
+            } else {
+                // 解码失败，显示默认头像
+                contactAvatar.setImageResource(R.drawable.ic_person);
+            }
+        } else {
+            // 没有头像数据，显示默认头像
+            contactAvatar.setImageResource(R.drawable.ic_person);
+        }
     }
 
     private void init(Context context, AttributeSet attrs) {

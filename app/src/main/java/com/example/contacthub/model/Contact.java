@@ -24,17 +24,10 @@ public class Contact implements Serializable {
     private String email;
     private String address;
     private List<Integer> groupIds;
+    private String photo;
     private String pinyin; // 姓名拼音
     private String firstLetter; // 姓名拼音首字母
-    public Contact(Integer id, String name, String mobileNumber, String telephoneNumber, String email, String address, List<Integer> groups) {
-        this.id = id;
-        this.name = name;
-        this.mobileNumber = mobileNumber;
-        this.telephoneNumber = telephoneNumber;
-        this.email = email;
-        this.address = address;
-        this.groupIds = groups;
-    }
+
     public Contact()
     {
         this.mobileNumber = "无";
@@ -158,6 +151,13 @@ public class Contact implements Serializable {
         this.groupIds = groupIds;
     }
 
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
+    }
     public void generateNewId(Context context) {
         int newId = 0;
         try {
@@ -193,5 +193,7 @@ public class Contact implements Serializable {
             this.id = newId;
         }
     }
+
+
 }
 

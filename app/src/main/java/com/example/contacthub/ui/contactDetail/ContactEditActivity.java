@@ -1,6 +1,7 @@
 package com.example.contacthub.ui.contactDetail;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -19,12 +20,14 @@ import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
 import com.example.contacthub.model.Group;
 import com.example.contacthub.utils.FileUtil;
+import com.example.contacthub.utils.PhotoUtil;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,28 +39,62 @@ public class ContactEditActivity extends AppCompatActivity {
 
     private static final String TAG = "ContactEditActivity";
     private ShapeableImageView editContactAvatar;
-    private FloatingActionButton fabEditAvatar;
     private TextInputEditText etName, etMobile, etTelephone, etEmail, etAddress;
-    private MaterialButton btnSave, btnCancel;
     private LinearLayout groupsContainer;
     private MaterialCardView groupsCard;
 
     private Contact contact;
-    private Uri selectedImageUri;
     private FileUtil fileUtil;
     private List<Group> allGroups;
-    private Map<Integer, CheckBox> groupCheckboxes = new HashMap<>();
+    private final Map<Integer, CheckBox> groupCheckboxes = new HashMap<>();
     
     private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    selectedImageUri = result.getData().getData();
-                    if (selectedImageUri != null) {
-                        editContactAvatar.setImageURI(selectedImageUri);
+                    try {
+                        // 获取选择的图片URI
+                        Uri selectedImageUri = result.getData().getData();
+
+                        // 从URI加载位图
+                        Bitmap selectedBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
+
+                        // 压缩图片（可选，避免图片过大）
+                        Bitmap resizedBitmap = resizeBitmap(selectedBitmap, 500); // 调整为合适大小
+
+                        // 显示选择的图片
+                        editContactAvatar.setImageBitmap(resizedBitmap);
+
+                        // 将位图转换为Base64并保存到联系人对象
+                        String base64Image = PhotoUtil.bitmapToBase64(resizedBitmap);
+                        contact.setPhoto(base64Image);
+
+                        Log.d(TAG, "头像已更新为Base64数据");
+                    } catch (Exception e) {
+                        Log.e(TAG, "处理选择的图片失败", e);
+                        Toast.makeText(ContactEditActivity.this, "加载图片失败", Toast.LENGTH_SHORT).show();
                     }
                 }
-            });
+            }
+        );
+
+    private Bitmap resizeBitmap(Bitmap originalBitmap, int maxDimension) {
+        int width = originalBitmap.getWidth();
+        int height = originalBitmap.getHeight();
+
+        float ratio = (float) width / height;
+
+        int newWidth, newHeight;
+        if (width > height) {
+            newWidth = maxDimension;
+            newHeight = (int) (maxDimension / ratio);
+        } else {
+            newHeight = maxDimension;
+            newWidth = (int) (maxDimension * ratio);
+        }
+
+        return Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,17 +111,18 @@ public class ContactEditActivity extends AppCompatActivity {
 
         // 初始化控件
         editContactAvatar = findViewById(R.id.edit_contact_avatar);
-        fabEditAvatar = findViewById(R.id.fab_edit_avatar);
         etName = findViewById(R.id.et_name);
         etMobile = findViewById(R.id.et_mobile);
         etTelephone = findViewById(R.id.et_telephone);
         etEmail = findViewById(R.id.et_email);
         etAddress = findViewById(R.id.et_address);
-        btnSave = findViewById(R.id.btn_save);
-        btnCancel = findViewById(R.id.btn_cancel);
+
         groupsContainer = findViewById(R.id.groups_container);
         groupsCard = findViewById(R.id.groups_card);
 
+        FloatingActionButton fabEditAvatar = findViewById(R.id.fab_edit_avatar);
+        MaterialButton btnSave = findViewById(R.id.btn_save);
+        MaterialButton btnCancel = findViewById(R.id.btn_cancel);
         // 加载所有分组
         loadGroups();
 
@@ -135,12 +173,13 @@ public class ContactEditActivity extends AppCompatActivity {
             // 创建分组选择UI
             createGroupCheckboxes();
 
-            // 如果联系人有头像，则显示
-            // 注意：这里假设Contact类有获取和设置头像的方法
-            // if (contact.getAvatarUri() != null) {
-            //     editContactAvatar.setImageURI(contact.getAvatarUri());
-            //     selectedImageUri = contact.getAvatarUri();
-            // }
+            // 如果联系人有头像数据，则显示
+            if (contact.getPhoto() != null && !contact.getPhoto().isEmpty()) {
+                Bitmap avatarBitmap = PhotoUtil.base64ToBitmap(contact.getPhoto());
+                if (avatarBitmap != null) {
+                    editContactAvatar.setImageBitmap(avatarBitmap);
+                }
+            }
         }
     }
 
@@ -205,11 +244,6 @@ public class ContactEditActivity extends AppCompatActivity {
         // 更新联系人分组
         updateContactGroups();
 
-        // 设置头像
-        // if (selectedImageUri != null) {
-        //     contact.setAvatarUri(selectedImageUri);
-        // }
-
         // 保存联系人到文件
         try {
             // 读取现有联系人列表
@@ -233,7 +267,7 @@ public class ContactEditActivity extends AppCompatActivity {
             
             // 将更新后的列表转换为数组并保存
             Contact[] updatedContacts = contactList.toArray(new Contact[0]);
-            String json = new com.google.gson.Gson().toJson(updatedContacts);
+            String json = new Gson().toJson(updatedContacts);
             
             // 保存到文件
             java.io.FileOutputStream fos = openFileOutput("contacts.json", MODE_PRIVATE);
@@ -275,7 +309,6 @@ public class ContactEditActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            // 替换为 finish() 而不是调用已弃用的 onBackPressed()
             finish();
             return true;
         }
