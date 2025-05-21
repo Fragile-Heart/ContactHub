@@ -28,13 +28,17 @@ public class Contact implements Serializable {
     private String pinyin; // 姓名拼音
     private String firstLetter; // 姓名拼音首字母
 
+    private String qq; // QQ号码
+    private String wechat; // 微信号
+    private String website; // 个人主页
+    private String birthday; // 生日
+    private String company; // 工作单位
+    private String postalCode; // 邮编
+    private String notes; // 备注
+
     public Contact()
     {
-        this.mobileNumber = "无";
-        this.telephoneNumber = "无";
-        this.email = "无";
-        this.address = "无";
-        this.groupIds = null;
+
     }
     public void generatePinyin() {
         if (name == null || name.isEmpty()) {
@@ -44,35 +48,35 @@ public class Contact implements Serializable {
         }
 
         char firstChar = name.charAt(0);
-        
+
         // 检查首字符是否为英文字母
         if (isEnglishLetter(firstChar)) {
             // 对于英文字母开头的名字，直接使用其大写形式
             String upperFirst = String.valueOf(Character.toUpperCase(firstChar));
             this.firstLetter = upperFirst;
-            
+
             // 将整个名字转为小写，但首字母大写
             this.pinyin = upperFirst + name.substring(1).toLowerCase();
             return;
         }
-        
+
         // 检查首字符是否为汉字
         if (Pinyin.isChinese(firstChar)) {
             // 生成标准拼音
             String standardPinyin = Pinyin.toPinyin(name, "");
-            
+
             // 应用姓氏修正
             this.pinyin = ChineseSurnameCorrection.correctSurnamePinyin(name, standardPinyin);
-            
+
             // 根据修正后的拼音生成首字母索引
             this.firstLetter = String.valueOf(this.pinyin.charAt(0)).toUpperCase();
-            
+
             // 继续处理名字部分的首字母
             int startIndex = 1;
             if (name.length() >= 2 && SURNAME_PINYIN.containsKey(name.substring(0, 2))) {
                 startIndex = 2; // 跳过双字姓
             }
-            
+
             for (int i = startIndex; i < name.length(); i++) {
                 char c = name.charAt(i);
                 String py = Pinyin.toPinyin(c);
@@ -82,12 +86,12 @@ public class Contact implements Serializable {
             }
             return;
         }
-        
+
         // 对于非英文字母和非汉字开头的名字，归类到"#"
         this.pinyin = "#" + name;
         this.firstLetter = "#";
     }
-    
+
     // 判断字符是否为英文字母
     private boolean isEnglishLetter(char c) {
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
@@ -194,6 +198,59 @@ public class Contact implements Serializable {
         }
     }
 
+    public String getQq() {
+        return qq;
+    }
 
+    public void setQq(String qq) {
+        this.qq = qq;
+    }
+
+    public String getWechat() {
+        return wechat;
+    }
+
+    public void setWechat(String wechat) {
+        this.wechat = wechat;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
+
+    public String getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 }
-

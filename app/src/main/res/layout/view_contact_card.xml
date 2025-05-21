@@ -60,6 +60,7 @@
 
                 <!-- 手机号 -->
                 <LinearLayout
+                    android:id="@+id/layout_mobile"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -99,6 +100,7 @@
 
                 <!-- 电话 -->
                 <LinearLayout
+                    android:id="@+id/layout_telephone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -138,6 +140,7 @@
 
                 <!-- 邮箱 -->
                 <LinearLayout
+                    android:id="@+id/layout_email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -177,6 +180,7 @@
 
                 <!-- 地址 -->
                 <LinearLayout
+                    android:id="@+id/layout_address"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -211,6 +215,286 @@
                             android:textColor="#212121"
                             android:textSize="16sp"
                             tools:text="138 0013 8000" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- QQ -->
+                <LinearLayout
+                    android:id="@+id/layout_qq"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_qq"
+                        app:tint="#00BCD4" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="QQ"
+                            android:textColor="#757575"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_qq"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="#212121"
+                            android:textSize="16sp"
+                            tools:text="10001" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 微信 -->
+                <LinearLayout
+                    android:id="@+id/layout_wechat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_wechat"
+                        app:tint="#4CAF50" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="微信"
+                            android:textColor="#757575"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_wechat"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="#212121"
+                            android:textSize="16sp"
+                            tools:text="wxid_abc123" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 个人主页 -->
+                <LinearLayout
+                    android:id="@+id/layout_website"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_web"
+                        app:tint="#4CAF50" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="个人主页"
+                            android:textColor="#757575"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_website"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="#212121"
+                            android:textSize="16sp"
+                            tools:text="https://example.com" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 生日 -->
+                <LinearLayout
+                    android:id="@+id/layout_birthday"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_cake"
+                        app:tint="#E91E63" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="生日"
+                            android:textColor="#757575"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_birthday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="#212121"
+                            android:textSize="16sp"
+                            tools:text="1990-01-01" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 工作单位 -->
+                <LinearLayout
+                    android:id="@+id/layout_company"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_work"
+                        app:tint="#795548" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="工作单位"
+                            android:textColor="#757575"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_company"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="#212121"
+                            android:textSize="16sp"
+                            tools:text="示例公司" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 邮编 -->
+                <LinearLayout
+                    android:id="@+id/layout_postal_code"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_postal"
+                        app:tint="#607D8B" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="邮编"
+                            android:textColor="#757575"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_postal_code"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="#212121"
+                            android:textSize="16sp"
+                            tools:text="100000" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 备注 -->
+                <LinearLayout
+                    android:id="@+id/layout_notes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_note"
+                        app:tint="#9C27B0" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="备注"
+                            android:textColor="#757575"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_notes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="#212121"
+                            android:textSize="16sp"
+                            tools:text="这是一段备注信息" />
                     </LinearLayout>
                 </LinearLayout>
 

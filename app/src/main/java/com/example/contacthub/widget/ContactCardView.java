@@ -42,19 +42,34 @@ import java.util.Locale;
 public class ContactCardView extends FrameLayout {
 
     private static final String TAG = "ContactCardView";
-    private static final int EDIT_CONTACT_REQUEST_CODE = 100;
+        private static final int EDIT_CONTACT_REQUEST_CODE = 100;
 
-    private MaterialButton btnCall;
-    private MaterialButton btnMessage;
-    private MaterialButton btnShare;
-    private FloatingActionButton fabEdit;
+        private TextView tvName;
+        private TextView tvMobileNumber;
+        private TextView tvTelephoneNumber;
+        private TextView tvEmail;
+        private TextView tvAddress;
+        private TextView tvQQ;
+        private TextView tvWechat;
+        private TextView tvWebsite;
+        private TextView tvBirthday;
+        private TextView tvCompany;
+        private TextView tvPostalCode;
+        private TextView tvNotes;
 
-    private TextView tvName;
-    private TextView tvMobileNumber;
-    private TextView tvTelephoneNumber;
-    private TextView tvEmail;
-    private TextView tvAddress;
-    private ShapeableImageView contactAvatar;
+        private View layoutMobileNumber;
+        private View layoutTelephoneNumber;
+        private View layoutEmail;
+        private View layoutAddress;
+        private View layoutQQ;
+        private View layoutWechat;
+        private View layoutWebsite;
+        private View layoutBirthday;
+        private View layoutCompany;
+        private View layoutPostalCode;
+        private View layoutNotes;
+
+        private ShapeableImageView contactAvatar;
 
     private QRCodeUtil qrCodeUtil;  // QRCodeUtils实例
 
@@ -108,7 +123,7 @@ public class ContactCardView extends FrameLayout {
             tvMobileNumber.setText(mobileNumber);
             tvMobileNumber.setVisibility(View.VISIBLE);
         } else {
-            tvMobileNumber.setVisibility(View.GONE);
+            layoutMobileNumber.setVisibility(View.GONE);
         }
 
         // 更新座机号码，如果为空则隐藏
@@ -117,7 +132,7 @@ public class ContactCardView extends FrameLayout {
             tvTelephoneNumber.setText(telephoneNumber);
             tvTelephoneNumber.setVisibility(View.VISIBLE);
         } else {
-            tvTelephoneNumber.setVisibility(View.GONE);
+            layoutTelephoneNumber.setVisibility(View.GONE);
         }
 
         // 更新电子邮件，如果为空则隐藏
@@ -126,7 +141,7 @@ public class ContactCardView extends FrameLayout {
             tvEmail.setText(email);
             tvEmail.setVisibility(View.VISIBLE);
         } else {
-            tvEmail.setVisibility(View.GONE);
+            layoutEmail.setVisibility(View.GONE);
         }
 
         // 更新地址，如果为空则隐藏
@@ -135,7 +150,69 @@ public class ContactCardView extends FrameLayout {
             tvAddress.setText(address);
             tvAddress.setVisibility(View.VISIBLE);
         } else {
-            tvAddress.setVisibility(View.GONE);
+            layoutAddress.setVisibility(View.GONE);
+        }
+
+        String qq = currentContact.getQq();
+        if (qq != null && !qq.isEmpty()) {
+            tvQQ.setText(qq);
+            layoutQQ.setVisibility(View.VISIBLE);
+        } else {
+            layoutQQ.setVisibility(View.GONE);
+        }
+
+        // 更新微信
+        String wechat = currentContact.getWechat();
+        if (wechat != null && !wechat.isEmpty()) {
+            tvWechat.setText(wechat);
+            layoutWechat.setVisibility(View.VISIBLE);
+        } else {
+            layoutWechat.setVisibility(View.GONE);
+        }
+
+        // 更新个人主页
+        String website = currentContact.getWebsite();
+        if (website != null && !website.isEmpty()) {
+            tvWebsite.setText(website);
+            layoutWebsite.setVisibility(View.VISIBLE);
+        } else {
+            layoutWebsite.setVisibility(View.GONE);
+        }
+
+        // 更新生日
+        String birthday = currentContact.getBirthday();
+        if (birthday != null && !birthday.isEmpty()) {
+            tvBirthday.setText(birthday);
+            layoutBirthday.setVisibility(View.VISIBLE);
+        } else {
+            layoutBirthday.setVisibility(View.GONE);
+        }
+
+        // 更新工作单位
+        String company = currentContact.getCompany();
+        if (company != null && !company.isEmpty()) {
+            tvCompany.setText(company);
+            layoutCompany.setVisibility(View.VISIBLE);
+        } else {
+            layoutCompany.setVisibility(View.GONE);
+        }
+
+        // 更新邮编
+        String postalCode = currentContact.getPostalCode();
+        if (postalCode != null && !postalCode.isEmpty()) {
+            tvPostalCode.setText(postalCode);
+            layoutPostalCode.setVisibility(View.VISIBLE);
+        } else {
+            layoutPostalCode.setVisibility(View.GONE);
+        }
+
+        // 更新备注
+        String notes = currentContact.getNotes();
+        if (notes != null && !notes.isEmpty()) {
+            tvNotes.setText(notes);
+            layoutNotes.setVisibility(View.VISIBLE);
+        } else {
+            layoutNotes.setVisibility(View.GONE);
         }
 
         String photoBase64 = currentContact.getPhoto();
@@ -158,20 +235,41 @@ public class ContactCardView extends FrameLayout {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.view_contact_card, this, true);
 
-        // 初始化QRCodeUtils实例
-        qrCodeUtil = new QRCodeUtil(context);
+                // 初始化QRCodeUtils实例
+                qrCodeUtil = new QRCodeUtil(context);
 
-        // 找到布局中的各个 View 元素
-        btnCall = findViewById(R.id.btn_call);
-        btnMessage = findViewById(R.id.btn_message);
-        btnShare = findViewById(R.id.btn_share);
-        fabEdit = findViewById(R.id.fab_edit);
-        tvName = findViewById(R.id.tv_contact_name);
-        tvMobileNumber = findViewById(R.id.tv_mobile_number);
-        tvTelephoneNumber = findViewById(R.id.tv_telephone_number);
-        tvEmail = findViewById(R.id.tv_contact_email);
-        tvAddress = findViewById(R.id.tv_location);
-        contactAvatar = findViewById(R.id.contact_avatar);
+                // 找到布局中的各个 View 元素
+                MaterialButton btnCall = findViewById(R.id.btn_call);
+                MaterialButton btnMessage = findViewById(R.id.btn_message);
+                MaterialButton btnShare = findViewById(R.id.btn_share);
+                FloatingActionButton fabEdit = findViewById(R.id.fab_edit);
+                tvName = findViewById(R.id.tv_contact_name);
+                tvMobileNumber = findViewById(R.id.tv_mobile_number);
+                tvTelephoneNumber = findViewById(R.id.tv_telephone_number);
+                tvEmail = findViewById(R.id.tv_contact_email);
+                tvAddress = findViewById(R.id.tv_location);
+                contactAvatar = findViewById(R.id.contact_avatar);
+
+                // 初始化附加字段
+                tvQQ = findViewById(R.id.tv_qq);
+                tvWechat = findViewById(R.id.tv_wechat);
+                tvWebsite = findViewById(R.id.tv_website);
+                tvBirthday = findViewById(R.id.tv_birthday);
+                tvCompany = findViewById(R.id.tv_company);
+                tvPostalCode = findViewById(R.id.tv_postal_code);
+                tvNotes = findViewById(R.id.tv_notes);
+
+                layoutQQ = findViewById(R.id.layout_qq);
+                layoutWechat = findViewById(R.id.layout_wechat);
+                layoutWebsite = findViewById(R.id.layout_website);
+                layoutBirthday = findViewById(R.id.layout_birthday);
+                layoutCompany = findViewById(R.id.layout_company);
+                layoutPostalCode = findViewById(R.id.layout_postal_code);
+                layoutNotes = findViewById(R.id.layout_notes);
+                layoutMobileNumber = findViewById(R.id.layout_mobile);
+                layoutTelephoneNumber = findViewById(R.id.layout_telephone);
+                layoutEmail = findViewById(R.id.layout_email);
+                layoutAddress = findViewById(R.id.layout_address);
 
         // 设置按钮点击监听器，在触发时传递 currentContact 对象
         btnCall.setOnClickListener(v -> {
@@ -253,17 +351,42 @@ public class ContactCardView extends FrameLayout {
     }
 
     public void clearContactInfo() {
-        this.currentContact = null; // 清除存储的联系人对象
 
-        // 清空所有信息
-        tvName.setText(""); // 清空姓名
-        tvMobileNumber.setText(""); // 清空手机号码
-        tvTelephoneNumber.setText(""); // 清空座机号码
-        tvEmail.setText(""); // 清空电子邮件
-        tvAddress.setText(""); // 清空地址
+        // 清除基本字段
+        if (tvName != null) tvName.setText("");
+        if (tvMobileNumber != null) {
+            tvMobileNumber.setText("");
+            tvMobileNumber.setVisibility(View.GONE);
+        }
+        if (tvTelephoneNumber != null) {
+            tvTelephoneNumber.setText("");
+            tvTelephoneNumber.setVisibility(View.GONE);
+        }
+        if (tvEmail != null) {
+            tvEmail.setText("");
+            tvEmail.setVisibility(View.GONE);
+        }
+        if (tvAddress != null) {
+            tvAddress.setText("");
+            tvAddress.setVisibility(View.GONE);
+        }
+        if (contactAvatar != null) contactAvatar.setImageResource(R.drawable.ic_person);
+        // 清除新增字段并隐藏
+        if (tvQQ != null) tvQQ.setText("");
+        if (tvWechat != null) tvWechat.setText("");
+        if (tvWebsite != null) tvWebsite.setText("");
+        if (tvBirthday != null) tvBirthday.setText("");
+        if (tvCompany != null) tvCompany.setText("");
+        if (tvPostalCode != null) tvPostalCode.setText("");
+        if (tvNotes != null) tvNotes.setText("");
 
-        // 设置默认头像或清空头像
-        contactAvatar.setImageResource(R.drawable.ic_person); // 设置默认头像
+        if (layoutQQ != null) layoutQQ.setVisibility(View.GONE);
+        if (layoutWechat != null) layoutWechat.setVisibility(View.GONE);
+        if (layoutWebsite != null) layoutWebsite.setVisibility(View.GONE);
+        if (layoutBirthday != null) layoutBirthday.setVisibility(View.GONE);
+        if (layoutCompany != null) layoutCompany.setVisibility(View.GONE);
+        if (layoutPostalCode != null) layoutPostalCode.setVisibility(View.GONE);
+        if (layoutNotes != null) layoutNotes.setVisibility(View.GONE);
     }
 
     private void dialNumber(String phoneNumber) {

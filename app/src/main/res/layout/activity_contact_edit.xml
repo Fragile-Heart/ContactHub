@@ -149,12 +149,104 @@
                             android:inputType="textEmailAddress" />
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- 添加QQ输入框 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_qq"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="QQ号码"
+                        app:startIconDrawable="@drawable/ic_qq"
+                        app:startIconTint="#00BCD4">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_qq"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- 添加微信输入框 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_wechat"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="微信号"
+                        app:startIconDrawable="@drawable/ic_wechat"
+                        app:startIconTint="#4CAF50">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_wechat"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+
+                    <!-- 个人主页 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_website"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="个人主页"
+                        app:startIconDrawable="@drawable/ic_web"
+                        app:startIconTint="#4CAF50">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_website"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textUri" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- 生日 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_birthday"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="生日"
+                        app:startIconDrawable="@drawable/ic_cake"
+                        app:startIconTint="#E91E63">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_birthday"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="date" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- 工作单位 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_company"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="工作单位"
+                        app:startIconDrawable="@drawable/ic_work"
+                        app:startIconTint="#795548">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_company"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
                     <!-- 地址编辑 -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/til_address"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
                         android:hint="地址"
                         app:startIconDrawable="@drawable/ic_location"
                         app:startIconTint="#FF5722">
@@ -165,6 +257,42 @@
                             android:layout_height="wrap_content"
                             android:inputType="textPostalAddress"
                             android:minLines="2" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- 邮编 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_postal_code"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="邮编"
+                        app:startIconDrawable="@drawable/ic_postal"
+                        app:startIconTint="#607D8B">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_postal_code"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- 备注 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_notes"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="备注"
+                        app:startIconDrawable="@drawable/ic_note"
+                        app:startIconTint="#9C27B0">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_notes"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textMultiLine"
+                            android:minLines="3" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
