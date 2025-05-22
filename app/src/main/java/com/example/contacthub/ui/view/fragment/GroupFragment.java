@@ -7,6 +7,8 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -23,6 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.contacthub.R;
+import com.example.contacthub.ui.adapter.ContactCheckboxAdapter;
 import com.example.contacthub.ui.adapter.GroupAdapter;
 import com.example.contacthub.databinding.FragmentGroupBinding;
 import com.example.contacthub.model.Contact;
@@ -286,31 +289,114 @@ public class GroupFragment extends Fragment {
                 .show();
     }
 
+    // 删除分组
+    private void deleteGroup(Group groupToDelete, int position) {
+        try {
+            int groupId = groupToDelete.getId();
+
+            // 从内存列表中删除
+            groups.remove(position);
+            groupAdapter.notifyItemRemoved(position);
+
+            // 保存更新后的分组列表到文件
+            Group[] groupArray = groups.toArray(new Group[0]);
+            String json = new Gson().toJson(groupArray);
+
+            FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
+            fos.write(json.getBytes());
+            fos.close();
+
+            // 更新联系人的分组信息（从联系人的分组列表中移除该分组ID）
+            List<Contact> contacts = loadContacts();
+            boolean contactsUpdated = false;
+
+            for (Contact contact : contacts) {
+                List<Integer> contactGroupIds = contact.getGroupIds();
+                if (contactGroupIds != null && contactGroupIds.contains(groupId)) {
+                    contactGroupIds.remove(Integer.valueOf(groupId));
+                    contactsUpdated = true;
+                }
+            }
+
+            // 如果有联系人被更新，保存联系人数据
+            if (contactsUpdated) {
+                Contact[] contactArray = contacts.toArray(new Contact[0]);
+                String contactsJson = new Gson().toJson(contactArray);
+
+                FileOutputStream contactsFos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);
+                contactsFos.write(contactsJson.getBytes());
+                contactsFos.close();
+            }
+
+            Toast.makeText(requireContext(), "分组已删除", Toast.LENGTH_SHORT).show();
+            Log.d("GroupFragment", "分组已删除: " + groupToDelete.getName() + ", ID: " + groupId);
+            
+        } catch (Exception e) {
+            Log.e("GroupFragment", "删除分组失败", e);
+            Toast.makeText(requireContext(), "删除分组失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
     // 显示管理分组对话框
     private void showManageGroupDialog(Group group, int position) {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.dialog_add_group_bottom_sheet, null);
+        View view = getLayoutInflater().inflate(R.layout.dialog_manage_group, null);
         dialog.setContentView(view);
 
         TextInputEditText etGroupName = view.findViewById(R.id.et_group_name);
+        TextInputEditText etSearch = view.findViewById(R.id.et_search); // 获取搜索框引用
+        RecyclerView recyclerContacts = view.findViewById(R.id.recycler_contacts);
         MaterialButton btnCancel = view.findViewById(R.id.btn_cancel);
-        MaterialButton btnCreate = view.findViewById(R.id.btn_create);
+        MaterialButton btnSave = view.findViewById(R.id.btn_save);
 
         // 设置当前分组名称
         etGroupName.setText(group.getName());
 
-        // 修改按钮文本
-        btnCreate.setText("保存");
+        // 加载所有联系人
+        List<Contact> allContacts = loadContacts();
+        
+        // 获取属于当前分组的联系人ID列表
+        List<Integer> groupMemberIds = new ArrayList<>();
+        for (Contact contact : allContacts) {
+            if (contact.getGroupIds() != null && contact.getGroupIds().contains(group.getId())) {
+                groupMemberIds.add(contact.getId());
+            }
+        }
+
+        // 设置联系人列表
+        recyclerContacts.setLayoutManager(new LinearLayoutManager(requireContext()));
+        ContactCheckboxAdapter adapter = new ContactCheckboxAdapter(allContacts, groupMemberIds);
+        recyclerContacts.setAdapter(adapter);
+
+        // 设置搜索功能
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // 不需要实现
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // 当文本变化时过滤联系人列表
+                adapter.filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 不需要实现
+            }
+        });
 
         btnCancel.setOnClickListener(v -> {
             dialog.dismiss();
             closeItem(position);
         });
 
-        btnCreate.setOnClickListener(v -> {
+        btnSave.setOnClickListener(v -> {
             String newGroupName = etGroupName.getText().toString().trim();
             if (!newGroupName.isEmpty()) {
-                updateGroupName(group, newGroupName, position);
+                List<Integer> selectedContactIds = adapter.getSelectedContactIds();
+                updateGroupAndMembers(group, newGroupName, selectedContactIds, position);
                 dialog.dismiss();
                 closeItem(position);
             } else {
@@ -322,8 +408,8 @@ public class GroupFragment extends Fragment {
         dialog.show();
     }
 
-    // 更新分组名称
-    private void updateGroupName(Group group, String newName, int position) {
+    // 更新分组名称和成员
+    private void updateGroupAndMembers(Group group, String newName, List<Integer> selectedContactIds, int position) {
         try {
             // 更新内存中的分组名称
             group.setName(newName);
@@ -337,40 +423,31 @@ public class GroupFragment extends Fragment {
             fos.write(json.getBytes());
             fos.close();
 
-            Toast.makeText(requireContext(), "分组名称已更新", Toast.LENGTH_SHORT).show();
-            Log.d("GroupFragment", "分组名称已更新: " + newName + ", ID: " + group.getId());
-        } catch (Exception e) {
-            Log.e("GroupFragment", "更新分组名称失败", e);
-            Toast.makeText(requireContext(), "更新分组名称失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    // 删除分组
-    private void deleteGroup(Group group, int position) {
-        try {
-            int groupIdToDelete = group.getId();
-
-            // 从列表中移除分组
-            groups.remove(position);
-            groupAdapter.notifyItemRemoved(position);
-
-            // 保存更新后的分组列表到文件
-            Group[] groupArray = groups.toArray(new Group[0]);
-            String json = new Gson().toJson(groupArray);
-
-            FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
-            fos.write(json.getBytes());
-            fos.close();
-
-            // 更新联系人数据，移除已删除分组的引用
+            // 更新联系人的分组信息
             List<Contact> contacts = loadContacts();
             boolean contactsUpdated = false;
 
+            // 获取分组ID
+            int groupId = group.getId();
+
             for (Contact contact : contacts) {
-                List<Integer> groupIds = contact.getGroupIds();
-                if (groupIds != null && groupIds.contains(groupIdToDelete)) {
-                    // 从联系人的分组列表中移除此分组ID
-                    groupIds.remove(Integer.valueOf(groupIdToDelete));
+                boolean isSelected = selectedContactIds.contains(contact.getId());
+                List<Integer> contactGroupIds = contact.getGroupIds();
+                
+                if (contactGroupIds == null) {
+                    contactGroupIds = new ArrayList<>();
+                    contact.setGroupIds(contactGroupIds);
+                }
+                
+                boolean containsGroup = contactGroupIds.contains(groupId);
+
+                if (isSelected && !containsGroup) {
+                    // 如果联系人被选中但不在分组中，添加到分组
+                    contactGroupIds.add(groupId);
+                    contactsUpdated = true;
+                } else if (!isSelected && containsGroup) {
+                    // 如果联系人未被选中但在分组中，从分组中移除
+                    contactGroupIds.remove(Integer.valueOf(groupId));
                     contactsUpdated = true;
                 }
             }
@@ -383,17 +460,17 @@ public class GroupFragment extends Fragment {
                 FileOutputStream contactsFos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);
                 contactsFos.write(contactsJson.getBytes());
                 contactsFos.close();
-
-                Log.d("GroupFragment", "已更新关联联系人的分组引用");
             }
 
-            Toast.makeText(requireContext(), "分组 '" + group.getName() + "' 已删除", Toast.LENGTH_SHORT).show();
-            Log.d("GroupFragment", "分组已删除: " + group.getName() + ", ID: " + group.getId());
+            Toast.makeText(requireContext(), "分组已更新", Toast.LENGTH_SHORT).show();
+            Log.d("GroupFragment", "分组已更新: " + newName + ", ID: " + group.getId() + 
+                    ", 成员数: " + selectedContactIds.size());
+            
+            // 刷新适配器数据，反映更新后的分组成员数量
+            loadDataAndUpdateUI();
         } catch (Exception e) {
-            Log.e("GroupFragment", "删除分组失败", e);
-            Toast.makeText(requireContext(), "删除分组失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            // 发生错误时恢复视图
-            groupAdapter.notifyDataSetChanged();
+            Log.e("GroupFragment", "更新分组失败", e);
+            Toast.makeText(requireContext(), "更新分组失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
