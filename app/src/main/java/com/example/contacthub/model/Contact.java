@@ -13,9 +13,12 @@ import org.json.JSONObject;
 
 import java.io.FileInputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 联系人实体类
+ * 包含联系人的基本信息与相关操作方法
+ */
 public class Contact implements Serializable {
     private Integer id;
     private String name;
@@ -24,7 +27,7 @@ public class Contact implements Serializable {
     private String email;
     private String address;
     private List<Integer> groupIds;
-    private String photo; //存储base64编码
+    private String photo; // 存储头像的base64编码
     private String pinyin; // 姓名拼音
     private String firstLetter; // 姓名拼音首字母
 
@@ -36,10 +39,17 @@ public class Contact implements Serializable {
     private String postalCode; // 邮编
     private String notes; // 备注
 
-    public Contact()
-    {
-
+    /**
+     * 默认构造方法
+     */
+    public Contact() {
     }
+
+    /**
+     * 生成联系人姓名的拼音和首字母索引
+     * 支持中文、英文和特殊字符的处理
+     * 中文姓名会进行姓氏拼音修正
+     */
     public void generatePinyin() {
         if (name == null || name.isEmpty()) {
             this.pinyin = "#";
@@ -92,13 +102,66 @@ public class Contact implements Serializable {
         this.firstLetter = "#";
     }
 
-    // 判断字符是否为英文字母
+    /**
+     * 判断字符是否为英文字母
+     * 
+     * @param c 要检查的字符
+     * @return 如果是英文字母返回true，否则返回false
+     */
     private boolean isEnglishLetter(char c) {
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
     }
 
-    public String getPinyin() { return pinyin; }
-    public String getFirstLetter() { return firstLetter; }
+    /**
+     * 为联系人生成新的唯一ID
+     * 通过读取现有联系人文件确定最大ID值并加1
+     * 若读取失败则使用基于时间戳的ID生成方式
+     * 
+     * @param context 应用上下文，用于访问文件
+     */
+    public void generateNewId(Context context) {
+        int newId = 0;
+        try {
+            // 读取现有联系人列表找到最大ID
+            FileInputStream fis = context.openFileInput("contacts.json");
+            byte[] buffer = new byte[fis.available()];
+            fis.read(buffer);
+            fis.close();
+
+            String json = new String(buffer);
+            JSONArray contactsArray = new JSONArray(json);
+
+            // 找出最大ID
+            int maxId = 0;
+            for (int i = 0; i < contactsArray.length(); i++) {
+                JSONObject contact = contactsArray.getJSONObject(i);
+                int id = contact.getInt("id");
+                if (id > maxId) {
+                    maxId = id;
+                }
+            }
+
+            // 新ID为最大ID加1
+            newId = maxId + 1;
+        } catch (Exception e) {
+            Log.e("Contact", "生成新ID失败，使用时间戳ID", e);
+            // 使用时间戳生成唯一ID
+            long timestamp = System.currentTimeMillis();
+            newId = (int) (timestamp % Integer.MAX_VALUE);
+            if (newId < 10000) newId += 10000; // 确保ID至少有5位数
+        } finally {
+            this.id = newId;
+        }
+    }
+
+
+    public String getPinyin() { 
+        return pinyin; 
+    }
+
+    public String getFirstLetter() { 
+        return firstLetter; 
+    }
     public Integer getId() {
         return id;
     }
@@ -106,6 +169,7 @@ public class Contact implements Serializable {
     public void setId(Integer id) {
         this.id = id;
     }
+
 
     public String getName() {
         return name;
@@ -146,70 +210,27 @@ public class Contact implements Serializable {
     public void setAddress(String address) {
         this.address = address;
     }
-
     public List<Integer> getGroupIds() {
         return groupIds;
     }
-
     public void setGroupIds(List<Integer> groupIds) {
         this.groupIds = groupIds;
     }
-
     public String getPhoto() {
         return photo;
     }
-
     public void setPhoto(String photo) {
         this.photo = photo;
     }
-    public void generateNewId(Context context) {
-        int newId = 0;
-        try {
-            // 读取现有联系人列表找到最大ID
-            FileInputStream fis = context.openFileInput("contacts.json");
-            byte[] buffer = new byte[fis.available()];
-            fis.read(buffer);
-            fis.close();
-
-            String json = new String(buffer);
-            JSONArray contactsArray = new JSONArray(json);
-
-            // 存储所有现有ID
-            int maxId = 0;
-            for (int i = 0; i < contactsArray.length(); i++) {
-                JSONObject contact = contactsArray.getJSONObject(i);
-                int id = contact.getInt("id");
-                if (id > maxId) {
-                    maxId = id;
-                }
-            }
-
-            // 生成新ID并确保唯一性
-            newId = maxId + 1;
-
-        } catch (Exception e) {
-            Log.e("Contact", "生成新ID失败，使用随机大数", e);
-            // 使用UUID生成唯一ID，结合时间戳降低冲突概率
-            long timestamp = System.currentTimeMillis();
-            newId = (int) (timestamp % Integer.MAX_VALUE); // 取时间戳的低位作为ID基础
-            if (newId < 10000) newId += 10000; // 确保ID至少有5位数
-        }finally {
-            this.id = newId;
-        }
-    }
-
     public String getQq() {
         return qq;
     }
-
     public void setQq(String qq) {
         this.qq = qq;
     }
-
     public String getWechat() {
         return wechat;
     }
-
     public void setWechat(String wechat) {
         this.wechat = wechat;
     }
@@ -221,7 +242,6 @@ public class Contact implements Serializable {
     public void setWebsite(String website) {
         this.website = website;
     }
-
     public String getBirthday() {
         return birthday;
     }
@@ -229,11 +249,9 @@ public class Contact implements Serializable {
     public void setBirthday(String birthday) {
         this.birthday = birthday;
     }
-
     public String getCompany() {
         return company;
     }
-
     public void setCompany(String company) {
         this.company = company;
     }
@@ -241,15 +259,12 @@ public class Contact implements Serializable {
     public String getPostalCode() {
         return postalCode;
     }
-
     public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
     }
-
     public String getNotes() {
         return notes;
     }
-
     public void setNotes(String notes) {
         this.notes = notes;
     }
