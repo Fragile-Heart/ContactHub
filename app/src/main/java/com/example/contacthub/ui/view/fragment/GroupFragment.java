@@ -1,4 +1,4 @@
-package com.example.contacthub.ui.group;
+package com.example.contacthub.ui.view.fragment;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.contacthub.R;
-import com.example.contacthub.adapter.GroupAdapter;
+import com.example.contacthub.ui.adapter.GroupAdapter;
 import com.example.contacthub.databinding.FragmentGroupBinding;
 import com.example.contacthub.model.Contact;
 import com.example.contacthub.model.Group;

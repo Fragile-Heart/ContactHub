@@ -1,4 +1,4 @@
-package com.example.contacthub.adapter;
+package com.example.contacthub.ui.adapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 

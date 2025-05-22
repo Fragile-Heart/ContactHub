@@ -27,7 +27,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.contacthub.databinding.ActivityMainBinding;
 import com.example.contacthub.model.Contact;
-import com.example.contacthub.ui.contactDetail.ContactEditActivity;
+import com.example.contacthub.ui.view.contactDetail.ContactEditActivity;
 import com.example.contacthub.utils.QRCodeUtil;
 import com.journeyapps.barcodescanner.ScanOptions;
 

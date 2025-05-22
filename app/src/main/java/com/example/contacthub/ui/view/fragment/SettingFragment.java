@@ -1,4 +1,4 @@
-package com.example.contacthub.ui.setting;
+package com.example.contacthub.ui.view.fragment;
 
 import android.app.Activity;
 import android.content.Context;

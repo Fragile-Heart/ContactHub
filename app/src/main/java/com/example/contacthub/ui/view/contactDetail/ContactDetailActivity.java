@@ -1,4 +1,4 @@
-package com.example.contacthub.ui.contactDetail;
+package com.example.contacthub.ui.view.contactDetail;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,7 +13,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
 import com.example.contacthub.utils.FileUtil;
-import com.example.contacthub.widget.ContactCardView;
+import com.example.contacthub.ui.widget.ContactCardView;
 
 import java.util.ArrayList;
 import java.util.Arrays;

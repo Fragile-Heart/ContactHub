@@ -1,4 +1,4 @@
-package com.example.contacthub.widget;
+package com.example.contacthub.ui.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;

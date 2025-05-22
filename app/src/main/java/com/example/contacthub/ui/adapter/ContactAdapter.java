@@ -1,4 +1,4 @@
-package com.example.contacthub.adapter;
+package com.example.contacthub.ui.adapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
-import com.example.contacthub.ui.contactDetail.ContactDetailActivity;
+import com.example.contacthub.ui.view.contactDetail.ContactDetailActivity;
 import com.example.contacthub.utils.PhotoUtil;
 
 import java.util.List;

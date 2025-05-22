@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.contactList.ContactListFragment">
+    tools:context=".ui.view.fragment.ContactListFragment">
 
     <!-- 搜索框 -->
     <com.google.android.material.card.MaterialCardView
@@ -62,7 +62,7 @@
         app:layout_constraintTop_toBottomOf="@id/search_container" />
 
     <!-- 字母索引栏 -->
-    <com.example.contacthub.widget.AlphabetIndexView
+    <com.example.contacthub.ui.widget.AlphabetIndexView
         android:id="@+id/alphabet_index"
         android:layout_width="24dp"
         android:layout_height="0dp"

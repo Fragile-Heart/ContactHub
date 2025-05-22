@@ -7,25 +7,25 @@
 
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.example.contacthub.ui.contactList.ContactListFragment"
+        android:name="com.example.contacthub.ui.view.fragment.ContactListFragment"
         android:label="@string/title_contactList"
         tools:layout="@layout/fragment_contact_list" />
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.example.contacthub.ui.my.MyFragment"
+        android:name="com.example.contacthub.ui.view.fragment.MyFragment"
         android:label="@string/title_my"
         tools:layout="@layout/fragment_contact" />
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.example.contacthub.ui.group.GroupFragment"
+        android:name="com.example.contacthub.ui.view.fragment.GroupFragment"
         android:label="@string/title_group"
         tools:layout="@layout/fragment_group" />
 
     <fragment
         android:id="@+id/navigation_setting"
-        android:name="com.example.contacthub.ui.setting.SettingFragment"
+        android:name="com.example.contacthub.ui.view.fragment.SettingFragment"
         android:label="@string/title_setting"
         tools:layout="@layout/fragment_setting" />
 </navigation>

@@ -1,4 +1,4 @@
-package com.example.contacthub.ui.my;
+package com.example.contacthub.ui.view.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
-import com.example.contacthub.widget.ContactCardView;
+import com.example.contacthub.ui.widget.ContactCardView;
 
 public class MyFragment extends Fragment {
 

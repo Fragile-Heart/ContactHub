@@ -1,4 +1,4 @@
-package com.example.contacthub.adapter;
+package com.example.contacthub.ui.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;

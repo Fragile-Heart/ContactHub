@@ -1,4 +1,4 @@
-package com.example.contacthub.ui.contactList;
+package com.example.contacthub.ui.view.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,14 +16,14 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.example.contacthub.adapter.ContactAdapter;
-import com.example.contacthub.adapter.ContactSortByPinyinAdapter;
+import com.example.contacthub.ui.adapter.ContactAdapter;
+import com.example.contacthub.ui.adapter.ContactSortByPinyinAdapter;
 import com.example.contacthub.databinding.FragmentContactListBinding;
 import com.example.contacthub.model.Contact;
-import com.example.contacthub.ui.contactDetail.ContactEditActivity;
+import com.example.contacthub.ui.view.contactDetail.ContactEditActivity;
 import com.example.contacthub.utils.ContactIndexer;
 import com.example.contacthub.utils.FileUtil;
-import com.example.contacthub.widget.AlphabetIndexView;
+import com.example.contacthub.ui.widget.AlphabetIndexView;
 
 import java.util.ArrayList;
 import java.util.Arrays;

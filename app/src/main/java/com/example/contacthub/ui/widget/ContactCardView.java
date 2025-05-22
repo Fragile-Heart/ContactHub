@@ -1,4 +1,4 @@
-package com.example.contacthub.widget;
+package com.example.contacthub.ui.widget;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -22,7 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
-import com.example.contacthub.ui.contactDetail.ContactEditActivity;
+import com.example.contacthub.ui.view.contactDetail.ContactEditActivity;
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
 import com.example.contacthub.utils.PhotoUtil;

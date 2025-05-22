@@ -31,12 +31,12 @@
 
         <!-- 联系人详情 Activity -->
         <activity
-            android:name=".ui.contactDetail.ContactDetailActivity"
+            android:name=".ui.view.contactDetail.ContactDetailActivity"
             android:exported="false" />
 
         <!-- 联系人编辑 Activity -->
         <activity
-            android:name=".ui.contactDetail.ContactEditActivity"
+            android:name=".ui.view.contactDetail.ContactEditActivity"
             android:exported="false" />
     </application>
 

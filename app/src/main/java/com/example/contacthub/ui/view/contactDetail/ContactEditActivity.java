@@ -1,4 +1,4 @@
-package com.example.contacthub.ui.contactDetail;
+package com.example.contacthub.ui.view.contactDetail;
 
 import android.content.Intent;
 import android.graphics.Bitmap;

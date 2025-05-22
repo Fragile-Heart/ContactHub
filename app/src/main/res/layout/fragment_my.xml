@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.my.MyFragment">
+    tools:context=".ui.view.fragment.MyFragment">
 
-    <com.example.contacthub.widget.ContactCardView
+    <com.example.contacthub.ui.widget.ContactCardView
         android:id="@+id/contact_card_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
