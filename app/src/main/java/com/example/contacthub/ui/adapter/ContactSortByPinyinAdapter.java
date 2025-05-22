@@ -1,14 +1,20 @@
 package com.example.contacthub.ui.adapter;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.contacthub.R;
 import com.example.contacthub.model.Contact;
@@ -24,6 +30,13 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
 
     private Map<String, List<Contact>> contactMapByPinyin;
     private List<String> sortedKeys; // 存储排序后的键
+    private String searchKeyword = ""; // 新增搜索关键词
+
+    // 添加显示设置的常量
+    private static final String PREFS_NAME = "ContactDisplayPrefs";
+    private static final String KEY_SHOW_MOBILE = "show_mobile";
+    private static final String KEY_SHOW_TELEPHONE = "show_telephone";
+    private static final String KEY_SHOW_ADDRESS = "show_address";
 
     public ContactSortByPinyinAdapter(Map<String, List<Contact>> contactMapByPinyin) {
         this.contactMapByPinyin = contactMapByPinyin;
@@ -103,9 +116,9 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
 
         // 处理不存在的字母索引
         char index = 'Z';
-        for(char c = 'Z'; c >= 'A'; c--) {
+        for (char c = 'Z'; c >= 'A'; c--) {
             String letter = String.valueOf(c);
-            if(sectionIndexer.get(letter) == null) {
+            if (sectionIndexer.get(letter) == null) {
                 sectionIndexer.put(letter, sectionIndexer.get(String.valueOf(index)));
             } else {
                 index = c;
@@ -113,5 +126,49 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
         }
 
         return sectionIndexer;
+    }
+
+    /**
+     * 设置搜索关键词
+     *
+     * @param keyword 搜索关键词
+     */
+    public void setSearchKeyword(String keyword) {
+        this.searchKeyword = keyword;
+        notifyDataSetChanged();
+    }
+
+    /**
+     * 设置高亮文本
+     *
+     * @param textView 要设置的TextView
+     * @param text     原始文本
+     * @param keyword  要高亮的关键词
+     */
+    private void setHighlightedText(TextView textView, String text, String keyword) {
+        if (TextUtils.isEmpty(keyword) || TextUtils.isEmpty(text)) {
+            textView.setText(text);
+            return;
+        }
+
+        SpannableString spannableString = new SpannableString(text);
+        String lowerText = text.toLowerCase();
+        String lowerKeyword = keyword.toLowerCase();
+
+        int startIndex = lowerText.indexOf(lowerKeyword);
+        while (startIndex >= 0) {
+            int endIndex = startIndex + keyword.length();
+            if (endIndex <= text.length()) {
+                spannableString.setSpan(
+                        new ForegroundColorSpan(Color.RED),
+                        startIndex,
+                        endIndex,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+            }
+            startIndex = lowerText.indexOf(lowerKeyword, startIndex + 1);
+        }
+
+        textView.setText(spannableString);
     }
 }

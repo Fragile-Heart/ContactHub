@@ -4,6 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +28,7 @@ import java.util.List;
 public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
     private List<Contact> contacts;
     private OnContactClickListener listener;
+    private String searchKeyword = ""; // 新增搜索关键词
 
     // 添加显示设置的常量
     private static final String PREFS_NAME = "ContactDisplayPrefs";
@@ -45,31 +51,49 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         boolean showTelephone = prefs.getBoolean(KEY_SHOW_TELEPHONE, true);
         boolean showAddress = prefs.getBoolean(KEY_SHOW_ADDRESS, true);
 
-        // 设置联系人姓名
-        holder.nameTextView.setText(contact.getName());
+        // 设置联系人姓名（带高亮）
+        setHighlightedText(holder.nameTextView, contact.getName(), searchKeyword);
 
-        // 根据设置显示手机号码
+        // 检查搜索关键词是否匹配手机号码
         String mobileNumber = contact.getMobileNumber();
-        if (showMobile && mobileNumber != null && !mobileNumber.isEmpty()) {
-            holder.mobileTextView.setText("手机: " + mobileNumber);
+        boolean mobileMatches = !TextUtils.isEmpty(searchKeyword) && 
+                               mobileNumber != null && 
+                               mobileNumber.toLowerCase().contains(searchKeyword.toLowerCase());
+        
+        // 根据设置显示手机号码（带高亮），或者在搜索匹配时显示
+        if ((showMobile || mobileMatches) && mobileNumber != null && !mobileNumber.isEmpty()) {
+            String mobileText = "手机: " + mobileNumber;
+            setHighlightedText(holder.mobileTextView, mobileText, searchKeyword);
             holder.mobileTextView.setVisibility(View.VISIBLE);
         } else {
             holder.mobileTextView.setVisibility(View.GONE);
         }
 
-        // 根据设置显示固定电话
+        // 检查搜索关键词是否匹配固定电话
         String telephoneNumber = contact.getTelephoneNumber();
-        if (showTelephone && telephoneNumber != null && !telephoneNumber.isEmpty()) {
-            holder.telephoneTextView.setText("电话: " + telephoneNumber);
+        boolean telephoneMatches = !TextUtils.isEmpty(searchKeyword) && 
+                                  telephoneNumber != null && 
+                                  telephoneNumber.toLowerCase().contains(searchKeyword.toLowerCase());
+        
+        // 根据设置显示固定电话（带高亮），或者在搜索匹配时显示
+        if ((showTelephone || telephoneMatches) && telephoneNumber != null && !telephoneNumber.isEmpty()) {
+            String telephoneText = "电话: " + telephoneNumber;
+            setHighlightedText(holder.telephoneTextView, telephoneText, searchKeyword);
             holder.telephoneTextView.setVisibility(View.VISIBLE);
         } else {
             holder.telephoneTextView.setVisibility(View.GONE);
         }
 
-        // 根据设置显示地址
+        // 检查搜索关键词是否匹配地址
         String address = contact.getAddress();
-        if (showAddress && address != null && !address.isEmpty()) {
-            holder.addressTextView.setText("地址: " + address);
+        boolean addressMatches = !TextUtils.isEmpty(searchKeyword) && 
+                                address != null && 
+                                address.toLowerCase().contains(searchKeyword.toLowerCase());
+        
+        // 根据设置显示地址（带高亮），或者在搜索匹配时显示
+        if ((showAddress || addressMatches) && address != null && !address.isEmpty()) {
+            String addressText = "地址: " + address;
+            setHighlightedText(holder.addressTextView, addressText, searchKeyword);
             holder.addressTextView.setVisibility(View.VISIBLE);
         } else {
             holder.addressTextView.setVisibility(View.GONE);
@@ -104,8 +128,50 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         });
     }
 
+    /**
+     * 设置高亮文本
+     * @param textView 要设置的TextView
+     * @param text 原始文本
+     * @param keyword 要高亮的关键词
+     */
+    private void setHighlightedText(TextView textView, String text, String keyword) {
+        if (TextUtils.isEmpty(keyword) || TextUtils.isEmpty(text)) {
+            textView.setText(text);
+            return;
+        }
+
+        SpannableString spannableString = new SpannableString(text);
+        String lowerText = text.toLowerCase();
+        String lowerKeyword = keyword.toLowerCase();
+        
+        int startIndex = lowerText.indexOf(lowerKeyword);
+        while (startIndex >= 0) {
+            int endIndex = startIndex + keyword.length();
+            if (endIndex <= text.length()) {
+                spannableString.setSpan(
+                    new ForegroundColorSpan(Color.RED),
+                    startIndex,
+                    endIndex,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+            }
+            startIndex = lowerText.indexOf(lowerKeyword, startIndex + 1);
+        }
+        
+        textView.setText(spannableString);
+    }
+
     public ContactAdapter(List<Contact> contacts) {
         this.contacts = contacts;
+    }
+    
+    /**
+     * 设置搜索关键词
+     * @param keyword 搜索关键词
+     */
+    public void setSearchKeyword(String keyword) {
+        this.searchKeyword = keyword;
+        notifyDataSetChanged();
     }
 
     @NonNull

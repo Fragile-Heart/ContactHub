@@ -118,24 +118,20 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
 
     //模糊搜索更新联系人列表
     private void updateContactList(String key){
-
         List<Contact> nowContactList;
 
-        if(key.isEmpty())
-        {
+        if(key.isEmpty()) {
             binding.recyclerContactList.setLayoutManager(new LinearLayoutManager(requireContext()));
             binding.recyclerContactList.setAdapter(new ContactSortByPinyinAdapter(contactMapByPinyin));
-
             binding.alphabetIndex.setVisibility(View.VISIBLE);
-
-        } else{
+        } else {
             nowContactList = ContactIndexer.search(allContacts, key);
             binding.recyclerContactList.setLayoutManager(new LinearLayoutManager(requireContext()));
-            binding.recyclerContactList.setAdapter(new ContactAdapter(nowContactList));
-
+            ContactAdapter adapter = new ContactAdapter(nowContactList);
+            adapter.setSearchKeyword(key); // 设置搜索关键词以便高亮显示
+            binding.recyclerContactList.setAdapter(adapter);
             binding.alphabetIndex.setVisibility(View.GONE);
         }
-
     }
 
     private List<Contact> loadContactList()

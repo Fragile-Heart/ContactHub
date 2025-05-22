@@ -46,42 +46,47 @@ public class ContactIndexer {
         return letterGroups;
     }
 
-    // 搜索联系人
+    /**
+     * 搜索联系人
+     * @param contacts 联系人列表
+     * @param keyword 搜索关键词
+     * @return 匹配的联系人列表
+     */
     public static List<Contact> search(List<Contact> contacts, String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return sortByPinyin(contacts);
+        List<Contact> result = new ArrayList<>();
+        if (keyword == null || keyword.isEmpty()) {
+            return contacts;
         }
-
-        String lowercaseKeyword = keyword.toLowerCase();
-
-        return contacts.stream()
-                .filter(contact -> {
-                    // 1. 匹配名字
-                    if (contact.getName() != null &&
-                            contact.getName().toLowerCase().contains(lowercaseKeyword)) {
-                        return true;
-                    }
-
-                    // 2. 单个字符匹配：只匹配拼音首字母
-                    if (lowercaseKeyword.length() == 1) {
-                        return matchesSingleChar(contact.getName(), lowercaseKeyword);
-                    }
-                    // 3. 多字符匹配：检查每个字的完整拼音是否以关键词开头
-                    else if (contact.getName() != null) {
-                        for (int i = 0; i < contact.getName().length(); i++) {
-                            char c = contact.getName().charAt(i);
-                            String py = Pinyin.toPinyin(c).toLowerCase();
-                            if (py.startsWith(lowercaseKeyword)) {
-                                return true;
-                            }
-                        }
-                    }
-
-                    // 4. 匹配拼音首字母串
-                    return contact.getFirstLetter() != null &&
-                            contact.getFirstLetter().toLowerCase().contains(lowercaseKeyword);
-                })
-                .collect(Collectors.toList());
+        
+        String lowerKeyword = keyword.toLowerCase();
+        
+        for (Contact contact : contacts) {
+            // 匹配名字
+            if (contact.getName() != null && contact.getName().toLowerCase().contains(lowerKeyword)) {
+                result.add(contact);
+                continue;
+            }
+            
+            // 匹配拼音
+            if (contact.getPinyin() != null && contact.getPinyin().toLowerCase().contains(lowerKeyword)) {
+                result.add(contact);
+                continue;
+            }
+            
+            // 匹配手机号码
+            if (contact.getMobileNumber() != null && contact.getMobileNumber().contains(keyword)) {
+                result.add(contact);
+                continue;
+            }
+            
+            // 匹配电话号码
+            if (contact.getTelephoneNumber() != null && contact.getTelephoneNumber().contains(keyword)) {
+                result.add(contact);
+                continue;
+            }
+        }
+        
+        return result;
     }
 
     private static boolean matchesSingleChar(String name, String singleChar) {
@@ -98,6 +103,4 @@ public class ContactIndexer {
         }
         return false;
     }
-
-
 }
