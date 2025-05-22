@@ -20,6 +20,14 @@ public class MyFragment extends Fragment {
     private ContactCardView contactCardView;
     private FileUtil fileUtil;
 
+    /**
+     * 创建Fragment视图
+     * 
+     * @param inflater 用于加载布局的LayoutInflater
+     * @param container 视图的父容器
+     * @param savedInstanceState 保存的状态数据
+     * @return 创建的视图
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -42,6 +50,14 @@ public class MyFragment extends Fragment {
         return root;
     }
 
+    /**
+     * 处理Activity返回结果
+     * 用于处理名片编辑后的数据更新
+     * 
+     * @param requestCode 请求码
+     * @param resultCode 结果码
+     * @param data 返回的数据
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -55,6 +71,10 @@ public class MyFragment extends Fragment {
         Log.d(TAG, "已刷新我的名片数据");
     }
 
+    /**
+     * Fragment恢复可见时的处理
+     * 确保显示最新的名片数据
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -62,7 +82,10 @@ public class MyFragment extends Fragment {
         loadMyCard();
     }
 
-    // 从my.json加载名片数据
+    /**
+     * 加载个人名片数据
+     * 从本地存储读取my.json并显示到视图中
+     */
     private void loadMyCard() {
         Contact contact = fileUtil.readFile("my.json", Contact.class);
         if (contact != null) {

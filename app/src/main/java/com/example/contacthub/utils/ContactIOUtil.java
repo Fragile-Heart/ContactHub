@@ -24,7 +24,6 @@ import ezvcard.property.Telephone;
 import ezvcard.property.Url;
 
 import java.lang.reflect.Type;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,12 +35,19 @@ import java.util.regex.Pattern;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+/**
+ * 联系人导入导出工具类
+ * 提供各种格式(CSV、vCard)的联系人导入导出功能
+ */
 public class ContactIOUtil {
     private static final String TAG = "ContactIOUtil";
 
     /**
      * 将联系人转换为标准CSV格式
      * 兼容主流联系人应用(如Google联系人、Outlook)
+     *
+     * @param contactsJson 联系人JSON字符串
+     * @return 标准CSV格式的联系人数据
      */
     public static String convertContactsToCSV(String contactsJson) {
         StringBuilder csvBuilder = new StringBuilder();
@@ -74,7 +80,10 @@ public class ContactIOUtil {
     }
 
     /**
-     * RFC 4180标准CSV字段转义
+     * RFC 4180标准CSV字段转义处理
+     * 
+     * @param field 需要转义的字段内容
+     * @return 转义后的CSV兼容字段
      */
     public static String escapeCsvField(String field) {
         if (field == null || field.equals("无")) return "";
@@ -85,7 +94,11 @@ public class ContactIOUtil {
     }
 
     /**
-     * 将联系人转换为标准vCard 3.0格式，使用EZ-VCard库
+     * 将联系人转换为标准vCard 3.0格式
+     * 使用EZ-VCard库实现
+     * 
+     * @param contactsJson 联系人JSON字符串
+     * @return vCard 3.0格式的联系人数据
      */
     public static String convertContactsToVCard(String contactsJson) {
         Gson gson = new Gson();
@@ -245,7 +258,11 @@ public class ContactIOUtil {
     }
 
     /**
-     * 解析CSV文件为联系人列表，支持多种常见格式
+     * 解析CSV文件为联系人列表
+     * 支持多种常见格式的CSV文件，自动识别字段
+     * 
+     * @param csvContent CSV文件内容
+     * @return 解析后的联系人列表
      */
     public static List<Contact> parseContactsFromCSV(String csvContent) {
         List<Contact> contacts = new ArrayList<>();
@@ -370,7 +387,11 @@ public class ContactIOUtil {
     }
 
     /**
-     * 使用正则表达式正确解析CSV行，处理引号和逗号
+     * 使用正则表达式解析CSV行
+     * 处理引号和逗号等特殊情况
+     * 
+     * @param line CSV文件的一行
+     * @return 解析出的字段列表
      */
     private static List<String> parseCsvLine(String line) {
         List<String> fields = new ArrayList<>();
@@ -404,7 +425,11 @@ public class ContactIOUtil {
     }
 
     /**
-     * 解析vCard文件为联系人列表，使用EZ-VCard库
+     * 解析vCard文件为联系人列表
+     * 使用EZ-VCard库实现，支持vCard 2.1和3.0格式
+     * 
+     * @param vcardContent vCard文件内容
+     * @return 解析后的联系人列表
      */
     public static List<Contact> parseContactsFromVCard(String vcardContent) {
         List<Contact> contacts = new ArrayList<>();
@@ -537,7 +562,7 @@ public class ContactIOUtil {
                     contact.setPostalCode(postalCodeProp.getValue());
                 }
                 
-                // 解析照片 - 使用PhotoUtil处理
+                // 解析照片
                 if (!vcard.getPhotos().isEmpty()) {
                     Photo photo = vcard.getPhotos().get(0);
                     if (photo.getData() != null) {
@@ -553,15 +578,10 @@ public class ContactIOUtil {
                                 // 设置完整的data URI格式
                                 contact.setPhoto(base64Image);
                                 Log.d(TAG, "成功解析并转换照片数据");
-                            } else {
-                                Log.w(TAG, "照片数据无法解码为Bitmap");
                             }
                         } catch (Exception e) {
-                            Log.e(TAG, "处理照片数据失败: " + e.getMessage(), e);
+                            Log.e(TAG, "处理照片数据失败", e);
                         }
-                    } else if (photo.getUrl() != null) {
-                        // 如果是URL类型的照片，记录日志但不处理
-                        Log.d(TAG, "照片URL: " + photo.getUrl());
                     }
                 }
                 
@@ -574,8 +594,6 @@ public class ContactIOUtil {
                 }
             }
             
-            Log.d(TAG, "成功解析" + contacts.size() + "个有效联系人");
-            
         } catch (Exception e) {
             Log.e(TAG, "解析vCard失败: " + e.getMessage(), e);
         }
@@ -583,11 +601,23 @@ public class ContactIOUtil {
         return contacts;
     }
     
+    /**
+     * 判断字符串是否为空或等于"无"
+     * 
+     * @param str 要检查的字符串
+     * @return 如果字符串为null、空字符串或等于"无"则返回true
+     */
     private static boolean isEmpty(String str) {
         return str == null || str.isEmpty() || str.equals("无");
     }
 
-    // 判断字符串是否包含中文字符
+    /**
+     * 判断字符串是否包含中文字符
+     * 用于联系人姓名格式处理
+     * 
+     * @param str 要检查的字符串
+     * @return 如果包含中文字符则返回true
+     */
     private static boolean isChinese(String str) {
         if (str == null || str.isEmpty()) return false;
         for (char c : str.toCharArray()) {
@@ -598,7 +628,12 @@ public class ContactIOUtil {
         return false;
     }
 
-    // 为空字段设置默认值
+    /**
+     * 为空字段设置默认值
+     * 将"无"或空字符串转为null
+     * 
+     * @param contact 需要设置默认值的联系人对象
+     */
     private static void setDefaultValuesIfEmpty(Contact contact) {
         if (isEmpty(contact.getMobileNumber())) contact.setMobileNumber(null);
         if (isEmpty(contact.getTelephoneNumber())) contact.setTelephoneNumber(null);

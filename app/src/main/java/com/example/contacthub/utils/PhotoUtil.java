@@ -10,13 +10,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+/**
+ * 图片处理工具类，提供图片与Base64编码之间的转换功能
+ */
 public class PhotoUtil {
     private static final String TAG = "PhotoUtil";
 
     /**
      * 将Bitmap转换为Base64字符串
+     * 
      * @param bitmap 要转换的Bitmap图像
-     * @return Base64编码的字符串
+     * @return Base64编码的字符串，如果转换失败则返回null
      */
     public static String bitmapToBase64(Bitmap bitmap) {
         if (bitmap == null) {
@@ -42,8 +46,9 @@ public class PhotoUtil {
 
     /**
      * 将Base64字符串解码为Bitmap图像
+     * 
      * @param base64String Base64编码的字符串
-     * @return 解码后的Bitmap图像
+     * @return 解码后的Bitmap图像，如果解码失败则返回null
      */
     public static Bitmap base64ToBitmap(String base64String) {
         if (base64String == null || base64String.isEmpty()) {
@@ -61,8 +66,9 @@ public class PhotoUtil {
 
     /**
      * 将图片文件转换为Base64字符串
+     * 
      * @param filePath 图片文件路径
-     * @return Base64编码的字符串
+     * @return Base64编码的字符串，如果转换失败则返回null
      */
     public static String imageFileToBase64(String filePath) {
         File file = new File(filePath);

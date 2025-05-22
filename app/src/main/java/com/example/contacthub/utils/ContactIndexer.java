@@ -9,11 +9,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
+/**
+ * 联系人索引工具类
+ * 提供联系人的排序、分组和搜索功能
+ */
 public class ContactIndexer {
 
-    // 确保所有联系人已生成拼音
+    /**
+     * 确保所有联系人已生成拼音
+     * 
+     * @param contacts 需要处理的联系人列表
+     * @return 处理后的联系人列表（所有联系人均已生成拼音）
+     */
     public static List<Contact> ensurePinyin(List<Contact> contacts) {
         for (Contact contact : contacts) {
             if (contact.getPinyin() == null || contact.getPinyin().isEmpty()) {
@@ -23,14 +31,24 @@ public class ContactIndexer {
         return contacts;
     }
 
-    // 按拼音排序
+    /**
+     * 按拼音对联系人列表进行排序
+     * 
+     * @param contacts 需要排序的联系人列表
+     * @return 按拼音排序后的联系人列表
+     */
     public static List<Contact> sortByPinyin(List<Contact> contacts) {
         List<Contact> sortedList = new ArrayList<>(contacts);
         sortedList.sort(Comparator.comparing(Contact::getPinyin));
         return sortedList;
     }
 
-    // 获取按首字母分组的联系人
+    /**
+     * 获取按首字母分组的联系人
+     * 
+     * @param contacts 需要分组的联系人列表
+     * @return 按首字母分组的联系人映射表
+     */
     public static Map<String, List<Contact>> groupByFirstLetter(List<Contact> contacts) {
         List<Contact> sortedContacts = sortByPinyin(ensurePinyin(contacts));
         Map<String, List<Contact>> letterGroups = new TreeMap<>();
@@ -48,7 +66,9 @@ public class ContactIndexer {
 
     /**
      * 搜索联系人
-     * @param contacts 联系人列表
+     * 支持按名称、拼音、手机号码和电话号码进行搜索
+     * 
+     * @param contacts 要搜索的联系人列表
      * @param keyword 搜索关键词
      * @return 匹配的联系人列表
      */
@@ -87,20 +107,5 @@ public class ContactIndexer {
         }
         
         return result;
-    }
-
-    private static boolean matchesSingleChar(String name, String singleChar) {
-        if (name == null || name.isEmpty()) {
-            return false;
-        }
-
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            String py = Pinyin.toPinyin(c);
-            if (!py.isEmpty() && py.toLowerCase().charAt(0) == singleChar.charAt(0)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

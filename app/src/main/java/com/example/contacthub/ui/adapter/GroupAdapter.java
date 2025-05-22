@@ -18,26 +18,45 @@ import com.example.contacthub.model.Group;
 import java.util.ArrayList;
 import java.util.List;
 
-// 分组适配器 - 负责显示所有分组以及其中的联系人
+/**
+ * 分组适配器 - 负责显示所有分组以及其中的联系人
+ */
 public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.ViewHolder> {
     private List<Group> groups; // 所有分组
     private List<Contact> allContacts; // 所有联系人
 
-    // 构造函数接收分组和联系人数据
+    /**
+     * 构造函数
+     *
+     * @param groups 分组列表
+     * @param allContacts 所有联系人列表
+     */
     public GroupAdapter(List<Group> groups, List<Contact> allContacts) {
         this.groups = groups;
         this.allContacts = allContacts;
     }
 
+    /**
+     * 创建ViewHolder
+     *
+     * @param parent 父视图组
+     * @param viewType 视图类型
+     * @return 新创建的ViewHolder
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // 创建分组列表项视图
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_group, parent, false);
         return new ViewHolder(view);
     }
 
+    /**
+     * 绑定视图数据
+     *
+     * @param holder 视图持有者
+     * @param position 项目在列表中的位置
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Group group = groups.get(position);
@@ -57,9 +76,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.ViewHolder> 
 
         // 设置点击分组头部时的展开/折叠行为
         holder.groupHeader.setOnClickListener(v -> {
-            // 切换分组的展开状态
             group.setExpanded(!group.isExpanded());
-            // 通知适配器此项已变化
             notifyItemChanged(position);
         });
 
@@ -80,18 +97,30 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.ViewHolder> 
         }
     }
 
+    /**
+     * 获取项目数量
+     *
+     * @return 分组的数量
+     */
     @Override
     public int getItemCount() {
-        return groups.size(); // 返回分组数量
+        return groups.size();
     }
 
-    // ViewHolder保存分组列表项视图组件的引用
+    /**
+     * 视图持有者类
+     */
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView nameTextView;
         ImageView expandIcon;
         RecyclerView membersRecyclerView;
         RelativeLayout groupHeader;
 
+        /**
+         * 构造函数
+         *
+         * @param itemView 项目视图
+         */
         ViewHolder(View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.group_name);

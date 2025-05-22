@@ -5,6 +5,10 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 中文姓氏拼音校正工具
+ * 用于处理中文姓氏的特殊拼音规则
+ */
 public class ChineseSurnameCorrection {
     public static final Map<String, String> SURNAME_PINYIN = new HashMap<>();
 
@@ -32,6 +36,13 @@ public class ChineseSurnameCorrection {
         SURNAME_PINYIN.put("万俟", "MOQI");
     }
 
+    /**
+     * 修正中文姓氏的拼音
+     * 
+     * @param name 需要处理的中文姓名
+     * @param originalPinyin 原始转换的拼音
+     * @return 修正后的拼音字符串
+     */
     public static String correctSurnamePinyin(String name, String originalPinyin) {
         if (name == null || name.isEmpty() || originalPinyin == null) {
             return originalPinyin;
@@ -60,3 +71,4 @@ public class ChineseSurnameCorrection {
         return originalPinyin;
     }
 }
+

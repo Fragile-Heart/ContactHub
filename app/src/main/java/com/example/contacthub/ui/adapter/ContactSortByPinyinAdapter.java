@@ -1,12 +1,5 @@
 package com.example.contacthub.ui.adapter;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,29 +19,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 按拼音首字母分组显示联系人的适配器
+ */
 public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSortByPinyinAdapter.ViewHolder> {
 
     private Map<String, List<Contact>> contactMapByPinyin;
-    private List<String> sortedKeys; // 存储排序后的键
-    private String searchKeyword = ""; // 新增搜索关键词
+    private List<String> sortedKeys; // 存储排序后的首字母键
+    private String searchKeyword = "";
 
-    // 添加显示设置的常量
-    private static final String PREFS_NAME = "ContactDisplayPrefs";
-    private static final String KEY_SHOW_MOBILE = "show_mobile";
-    private static final String KEY_SHOW_TELEPHONE = "show_telephone";
-    private static final String KEY_SHOW_ADDRESS = "show_address";
-
+    /**
+     * 构造函数
+     *
+     * @param contactMapByPinyin 按拼音首字母分组的联系人映射
+     */
     public ContactSortByPinyinAdapter(Map<String, List<Contact>> contactMapByPinyin) {
         this.contactMapByPinyin = contactMapByPinyin;
-        // 初始化并排序键列表
         this.sortedKeys = getSortedKeyList();
     }
 
-    // 获取排序后的键列表，确保"#"在最后
+    /**
+     * 获取排序后的首字母键列表，确保"#"在最后
+     *
+     * @return 排序后的首字母键列表
+     */
     private List<String> getSortedKeyList() {
         List<String> keys = new ArrayList<>(contactMapByPinyin.keySet());
 
-        // 自定义排序：把"#"放在最后，其他字母按正常顺序
         Collections.sort(keys, new Comparator<String>() {
             @Override
             public int compare(String s1, String s2) {
@@ -63,6 +60,13 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
         return keys;
     }
 
+    /**
+     * 创建ViewHolder
+     *
+     * @param parent 父视图组
+     * @param viewType 视图类型
+     * @return 新创建的ViewHolder
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -71,41 +75,47 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
         return new ViewHolder(view);
     }
 
+    /**
+     * 绑定视图数据
+     *
+     * @param holder 视图持有者
+     * @param position 项目在列表中的位置
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // 使用排序后的键
         String pinyin = sortedKeys.get(position);
 
         // 设置拼音首字母
         holder.pinyinTextView.setText(pinyin);
 
-        // 为嵌套RecyclerView设置LayoutManager和Adapter
+        // 为嵌套RecyclerView设置适配器
         holder.contactsRecyclerView.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
-
         ContactAdapter contactAdapter = new ContactAdapter(contactMapByPinyin.get(pinyin));
-
+        
+        // 将搜索关键词传递给子适配器
+        if (!searchKeyword.isEmpty()) {
+            contactAdapter.setSearchKeyword(searchKeyword);
+        }
+        
         holder.contactsRecyclerView.setAdapter(contactAdapter);
-
-        // 确保子RecyclerView显示完整内容
         holder.contactsRecyclerView.setHasFixedSize(true);
     }
 
+    /**
+     * 获取项目数量
+     *
+     * @return 拼音分组的数量
+     */
     @Override
     public int getItemCount() {
         return sortedKeys.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView pinyinTextView;
-        RecyclerView contactsRecyclerView;
-
-        ViewHolder(View itemView) {
-            super(itemView);
-            pinyinTextView = itemView.findViewById(R.id.text_pinyin_letter);
-            contactsRecyclerView = itemView.findViewById(R.id.recycler_contact_Pinyin);
-        }
-    }
-
+    /**
+     * 获取字母索引位置映射，用于快速滚动到对应字母分组
+     *
+     * @return 字母到位置的映射
+     */
     public Map<String, Integer> getSectionIndexer() {
         Map<String, Integer> sectionIndexer = new HashMap<>();
 
@@ -129,7 +139,7 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
     }
 
     /**
-     * 设置搜索关键词
+     * 设置搜索关键词，用于高亮显示匹配内容
      *
      * @param keyword 搜索关键词
      */
@@ -139,36 +149,21 @@ public class ContactSortByPinyinAdapter extends RecyclerView.Adapter<ContactSort
     }
 
     /**
-     * 设置高亮文本
-     *
-     * @param textView 要设置的TextView
-     * @param text     原始文本
-     * @param keyword  要高亮的关键词
+     * 视图持有者类
      */
-    private void setHighlightedText(TextView textView, String text, String keyword) {
-        if (TextUtils.isEmpty(keyword) || TextUtils.isEmpty(text)) {
-            textView.setText(text);
-            return;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView pinyinTextView;
+        RecyclerView contactsRecyclerView;
+
+        /**
+         * 构造函数
+         *
+         * @param itemView 项目视图
+         */
+        ViewHolder(View itemView) {
+            super(itemView);
+            pinyinTextView = itemView.findViewById(R.id.text_pinyin_letter);
+            contactsRecyclerView = itemView.findViewById(R.id.recycler_contact_Pinyin);
         }
-
-        SpannableString spannableString = new SpannableString(text);
-        String lowerText = text.toLowerCase();
-        String lowerKeyword = keyword.toLowerCase();
-
-        int startIndex = lowerText.indexOf(lowerKeyword);
-        while (startIndex >= 0) {
-            int endIndex = startIndex + keyword.length();
-            if (endIndex <= text.length()) {
-                spannableString.setSpan(
-                        new ForegroundColorSpan(Color.RED),
-                        startIndex,
-                        endIndex,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-            }
-            startIndex = lowerText.indexOf(lowerKeyword, startIndex + 1);
-        }
-
-        textView.setText(spannableString);
     }
 }

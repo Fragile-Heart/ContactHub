@@ -55,22 +55,12 @@ public class ContactEditActivity extends AppCompatActivity {
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     try {
-                        // 获取选择的图片URI
                         Uri selectedImageUri = result.getData().getData();
-
-                        // 从URI加载位图
                         Bitmap selectedBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
-
-                        // 压缩图片（可选，避免图片过大）
-                        Bitmap resizedBitmap = resizeBitmap(selectedBitmap, 500); // 调整为合适大小
-
-                        // 显示选择的图片
+                        Bitmap resizedBitmap = resizeBitmap(selectedBitmap, 500);
                         editContactAvatar.setImageBitmap(resizedBitmap);
-
-                        // 将位图转换为Base64并保存到联系人对象
                         String base64Image = PhotoUtil.bitmapToBase64(resizedBitmap);
                         contact.setPhoto(base64Image);
-
                         Log.d(TAG, "头像已更新为Base64数据");
                     } catch (Exception e) {
                         Log.e(TAG, "处理选择的图片失败", e);
@@ -80,6 +70,13 @@ public class ContactEditActivity extends AppCompatActivity {
             }
         );
 
+    /**
+     * 调整位图大小到指定尺寸
+     * 
+     * @param originalBitmap 原始位图
+     * @param maxDimension 最大尺寸限制
+     * @return 调整大小后的位图
+     */
     private Bitmap resizeBitmap(Bitmap originalBitmap, int maxDimension) {
         int width = originalBitmap.getWidth();
         int height = originalBitmap.getHeight();
@@ -98,15 +95,18 @@ public class ContactEditActivity extends AppCompatActivity {
         return Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true);
     }
 
+    /**
+     * 初始化Activity，设置UI组件和事件监听器
+     * 
+     * @param savedInstanceState 保存的实例状态
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_edit);
 
-        // 初始化文件工具类
         fileUtil = new FileUtil(this);
 
-        // 初始化工具栏
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -132,6 +132,7 @@ public class ContactEditActivity extends AppCompatActivity {
         FloatingActionButton fabEditAvatar = findViewById(R.id.fab_edit_avatar);
         MaterialButton btnSave = findViewById(R.id.btn_save);
         MaterialButton btnCancel = findViewById(R.id.btn_cancel);
+        
         // 加载所有分组
         loadGroups();
 
@@ -146,20 +147,20 @@ public class ContactEditActivity extends AppCompatActivity {
             setTitle("新建联系人");
         }
 
-        // 设置头像选择 - 使用新的Activity Result API
+        // 设置头像选择
         fabEditAvatar.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
             imagePickerLauncher.launch(intent);
         });
 
-        // 保存按钮点击
         btnSave.setOnClickListener(v -> saveContact());
-
-        // 取消按钮点击
         btnCancel.setOnClickListener(v -> finish());
     }
 
+    /**
+     * 从文件中加载分组数据
+     */
     private void loadGroups() {
         try {
             Group[] groups = fileUtil.readFile("groups.json", Group[].class);
@@ -171,6 +172,9 @@ public class ContactEditActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 填充联系人信息到UI控件
+     */
     private void populateContactInfo() {
         if (contact != null) {
             etName.setText(contact.getName());
@@ -179,7 +183,6 @@ public class ContactEditActivity extends AppCompatActivity {
             etEmail.setText(contact.getEmail());
             etAddress.setText(contact.getAddress());
 
-            // 设置扩展字段的值
             etQQ.setText(contact.getQq());
             etWechat.setText(contact.getWechat());
             etWebsite.setText(contact.getWebsite());
@@ -191,10 +194,8 @@ public class ContactEditActivity extends AppCompatActivity {
             // 判断是否为我的名片，如果是则隐藏分组选择
             boolean isMyCard = getIntent().getBooleanExtra("isMyCard", false);
             if (isMyCard) {
-                // 如果是我的名片，隐藏分组卡片
                 groupsCard.setVisibility(View.GONE);
             } else {
-                // 创建分组选择UI
                 createGroupCheckboxes();
             }
 
@@ -208,6 +209,9 @@ public class ContactEditActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 创建分组选择的复选框UI
+     */
     private void createGroupCheckboxes() {
         // 清除现有的复选框
         groupsContainer.removeAllViews();
@@ -234,7 +238,6 @@ public class ContactEditActivity extends AppCompatActivity {
             checkBox.setText(group.getName());
             checkBox.setChecked(contactGroupIds.contains(group.getId()));
 
-            // 设置复选框边距
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -242,14 +245,14 @@ public class ContactEditActivity extends AppCompatActivity {
             params.setMargins(0, 8, 0, 8);
             checkBox.setLayoutParams(params);
 
-            // 保存复选框引用
             groupCheckboxes.put(group.getId(), checkBox);
-
-            // 添加到容器
             groupsContainer.addView(checkBox);
         }
     }
 
+    /**
+     * 保存联系人信息
+     */
     private void saveContact() {
         // 验证姓名不能为空
         String name = etName.getText().toString().trim();
@@ -274,10 +277,7 @@ public class ContactEditActivity extends AppCompatActivity {
         contact.setPostalCode(etPostalCode.getText().toString().trim());
         contact.setNotes(etNotes.getText().toString().trim());
 
-
         boolean isMyCard = getIntent().getBooleanExtra("isMyCard", false);
-
-
 
         // 保存联系人到文件
         try {
@@ -311,15 +311,9 @@ public class ContactEditActivity extends AppCompatActivity {
                     contactList.add(contact);
                 }
 
-                // 将更新后的列表转换为数组并保存
-                Contact[] updatedContacts = contactList.toArray(new Contact[0]);
-                String json = new Gson().toJson(updatedContacts);
-
                 // 保存到文件
-                java.io.FileOutputStream fos = openFileOutput("contacts.json", MODE_PRIVATE);
-                fos.write(json.getBytes());
-                fos.close();
-
+                Contact[] updatedContacts = contactList.toArray(new Contact[0]);
+                fileUtil.saveJSON(updatedContacts, "contacts.json");
                 Log.d(TAG, "联系人保存成功");
             }
         } catch (Exception e) {
@@ -337,22 +331,28 @@ public class ContactEditActivity extends AppCompatActivity {
         finish();
     }
 
+    /**
+     * 更新联系人分组信息
+     */
     private void updateContactGroups() {
-        // 清空当前分组列表
         List<Integer> selectedGroups = new ArrayList<>();
 
-        // 遍历所有分组复选框，添加选中的分组ID
         for (Map.Entry<Integer, CheckBox> entry : groupCheckboxes.entrySet()) {
             if (entry.getValue().isChecked()) {
                 selectedGroups.add(entry.getKey());
             }
         }
 
-        // 更新联系人的分组列表
         contact.setGroupIds(selectedGroups);
         Log.d(TAG, "更新联系人分组: " + selectedGroups);
     }
 
+    /**
+     * 处理菜单项选择事件
+     * 
+     * @param item 被点击的菜单项
+     * @return 如果事件已处理则返回true，否则返回父类处理结果
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {

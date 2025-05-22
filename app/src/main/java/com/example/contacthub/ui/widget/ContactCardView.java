@@ -39,6 +39,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * 联系人卡片视图，显示联系人详细信息并提供交互功能
+ * 包括显示联系人信息、拨打电话、发送短信、分享联系人和编辑联系人等功能
+ */
 public class ContactCardView extends FrameLayout {
 
     private static final String TAG = "ContactCardView";
@@ -70,48 +74,87 @@ public class ContactCardView extends FrameLayout {
     private View layoutNotes;
 
     private ShapeableImageView contactAvatar;
-
     private boolean isMyCard = false;
+    private QRCodeUtil qrCodeUtil;
+    private Contact currentContact;
+    private OnContactUpdatedListener contactUpdatedListener;
 
-    // 添加设置方法
+    /**
+     * 联系人更新监听器接口
+     */
+    public interface OnContactUpdatedListener {
+        /**
+         * 当联系人信息更新时调用
+         * 
+         * @param updatedContact 更新后的联系人对象
+         */
+        void onContactUpdated(Contact updatedContact);
+    }
+
+    /**
+     * 设置是否为"我的名片"模式
+     * 
+     * @param isMyCard 是否为我的名片
+     */
     public void setMyCard(boolean isMyCard) {
         this.isMyCard = isMyCard;
     }
 
-    private QRCodeUtil qrCodeUtil;  // QRCodeUtils实例
-
-    private Contact currentContact;
-    private OnContactUpdatedListener contactUpdatedListener;
-
-    // 回调接口用于通知联系人更新事件
-    public interface OnContactUpdatedListener {
-        void onContactUpdated(Contact updatedContact);
-    }
-
+    /**
+     * 设置联系人更新监听器
+     * 
+     * @param listener 联系人更新监听器
+     */
     public void setOnContactUpdatedListener(OnContactUpdatedListener listener) {
         this.contactUpdatedListener = listener;
     }
 
+    /**
+     * 构造函数
+     * 
+     * @param context 上下文
+     */
     public ContactCardView(@NonNull Context context) {
         super(context);
         init(context);
     }
 
+    /**
+     * 构造函数
+     * 
+     * @param context 上下文
+     * @param attrs 属性集
+     */
     public ContactCardView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
 
+    /**
+     * 构造函数
+     * 
+     * @param context 上下文
+     * @param attrs 属性集
+     * @param defStyleAttr 默认样式属性
+     */
     public ContactCardView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context);
     }
 
+    /**
+     * 设置要显示的联系人
+     * 
+     * @param contact 联系人对象
+     */
     public void setContact(Contact contact) {
         this.currentContact = contact;
         updateContactInfo();
     }
 
+    /**
+     * 更新联系人信息显示
+     */
     private void updateContactInfo() {
         if (currentContact == null) {
             clearContactInfo();
@@ -120,228 +163,163 @@ public class ContactCardView extends FrameLayout {
 
         tvName.setText(currentContact.getName());
 
-        // 更新手机号码，如果为空则隐藏
-        String mobileNumber = currentContact.getMobileNumber();
-        if (mobileNumber != null && !mobileNumber.isEmpty()) {
-            tvMobileNumber.setText(mobileNumber);
-            tvMobileNumber.setVisibility(View.VISIBLE);
-        } else {
-            layoutMobileNumber.setVisibility(View.GONE);
-        }
+        // 更新各个字段
+        updateFieldVisibility(layoutMobileNumber, tvMobileNumber, currentContact.getMobileNumber());
+        updateFieldVisibility(layoutTelephoneNumber, tvTelephoneNumber, currentContact.getTelephoneNumber());
+        updateFieldVisibility(layoutEmail, tvEmail, currentContact.getEmail());
+        updateFieldVisibility(layoutAddress, tvAddress, currentContact.getAddress());
+        updateFieldVisibility(layoutQQ, tvQQ, currentContact.getQq());
+        updateFieldVisibility(layoutWechat, tvWechat, currentContact.getWechat());
+        updateFieldVisibility(layoutWebsite, tvWebsite, currentContact.getWebsite());
+        updateFieldVisibility(layoutBirthday, tvBirthday, currentContact.getBirthday());
+        updateFieldVisibility(layoutCompany, tvCompany, currentContact.getCompany());
+        updateFieldVisibility(layoutPostalCode, tvPostalCode, currentContact.getPostalCode());
+        updateFieldVisibility(layoutNotes, tvNotes, currentContact.getNotes());
 
-        // 更新座机号码，如果为空则隐藏
-        String telephoneNumber = currentContact.getTelephoneNumber();
-        if (telephoneNumber != null && !telephoneNumber.isEmpty()) {
-            tvTelephoneNumber.setText(telephoneNumber);
-            tvTelephoneNumber.setVisibility(View.VISIBLE);
-        } else {
-            layoutTelephoneNumber.setVisibility(View.GONE);
-        }
-
-        // 更新电子邮件，如果为空则隐藏
-        String email = currentContact.getEmail();
-        if (email != null && !email.isEmpty()) {
-            tvEmail.setText(email);
-            tvEmail.setVisibility(View.VISIBLE);
-        } else {
-            layoutEmail.setVisibility(View.GONE);
-        }
-
-        // 更新地址，如果为空则隐藏
-        String address = currentContact.getAddress();
-        if (address != null && !address.isEmpty()) {
-            tvAddress.setText(address);
-            tvAddress.setVisibility(View.VISIBLE);
-        } else {
-            layoutAddress.setVisibility(View.GONE);
-        }
-
-        String qq = currentContact.getQq();
-        if (qq != null && !qq.isEmpty()) {
-            tvQQ.setText(qq);
-            layoutQQ.setVisibility(View.VISIBLE);
-        } else {
-            layoutQQ.setVisibility(View.GONE);
-        }
-
-        // 更新微信
-        String wechat = currentContact.getWechat();
-        if (wechat != null && !wechat.isEmpty()) {
-            tvWechat.setText(wechat);
-            layoutWechat.setVisibility(View.VISIBLE);
-        } else {
-            layoutWechat.setVisibility(View.GONE);
-        }
-
-        // 更新个人主页
-        String website = currentContact.getWebsite();
-        if (website != null && !website.isEmpty()) {
-            tvWebsite.setText(website);
-            layoutWebsite.setVisibility(View.VISIBLE);
-        } else {
-            layoutWebsite.setVisibility(View.GONE);
-        }
-
-        // 更新生日
-        String birthday = currentContact.getBirthday();
-        if (birthday != null && !birthday.isEmpty()) {
-            tvBirthday.setText(birthday);
-            layoutBirthday.setVisibility(View.VISIBLE);
-        } else {
-            layoutBirthday.setVisibility(View.GONE);
-        }
-
-        // 更新工作单位
-        String company = currentContact.getCompany();
-        if (company != null && !company.isEmpty()) {
-            tvCompany.setText(company);
-            layoutCompany.setVisibility(View.VISIBLE);
-        } else {
-            layoutCompany.setVisibility(View.GONE);
-        }
-
-        // 更新邮编
-        String postalCode = currentContact.getPostalCode();
-        if (postalCode != null && !postalCode.isEmpty()) {
-            tvPostalCode.setText(postalCode);
-            layoutPostalCode.setVisibility(View.VISIBLE);
-        } else {
-            layoutPostalCode.setVisibility(View.GONE);
-        }
-
-        // 更新备注
-        String notes = currentContact.getNotes();
-        if (notes != null && !notes.isEmpty()) {
-            tvNotes.setText(notes);
-            layoutNotes.setVisibility(View.VISIBLE);
-        } else {
-            layoutNotes.setVisibility(View.GONE);
-        }
-
+        // 更新头像
         String photoBase64 = currentContact.getPhoto();
         if (photoBase64 != null && !photoBase64.isEmpty()) {
-            // 使用PhotoUtil将Base64字符串转换为Bitmap
             Bitmap avatarBitmap = PhotoUtil.base64ToBitmap(photoBase64);
             if (avatarBitmap != null) {
                 contactAvatar.setImageBitmap(avatarBitmap);
             } else {
-                // 解码失败，显示默认头像
                 contactAvatar.setImageResource(R.drawable.ic_person);
             }
         } else {
-            // 没有头像数据，显示默认头像
             contactAvatar.setImageResource(R.drawable.ic_person);
         }
     }
 
+    /**
+     * 更新字段可见性和内容
+     * 
+     * @param layout 字段布局容器
+     * @param textView 字段文本视图
+     * @param value 字段值
+     */
+    private void updateFieldVisibility(View layout, TextView textView, String value) {
+        if (value != null && !value.isEmpty()) {
+            textView.setText(value);
+            layout.setVisibility(View.VISIBLE);
+        } else {
+            layout.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * 初始化视图组件和事件监听器
+     * 
+     * @param context 上下文
+     */
     private void init(Context context) {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.view_contact_card, this, true);
 
-                // 初始化QRCodeUtils实例
-                qrCodeUtil = new QRCodeUtil(context);
+        // 初始化QRCodeUtils实例
+        qrCodeUtil = new QRCodeUtil(context);
 
-                // 找到布局中的各个 View 元素
-                MaterialButton btnCall = findViewById(R.id.btn_call);
-                MaterialButton btnMessage = findViewById(R.id.btn_message);
-                MaterialButton btnShare = findViewById(R.id.btn_share);
-                FloatingActionButton fabEdit = findViewById(R.id.fab_edit);
-                tvName = findViewById(R.id.tv_contact_name);
-                tvMobileNumber = findViewById(R.id.tv_mobile_number);
-                tvTelephoneNumber = findViewById(R.id.tv_telephone_number);
-                tvEmail = findViewById(R.id.tv_contact_email);
-                tvAddress = findViewById(R.id.tv_location);
-                contactAvatar = findViewById(R.id.contact_avatar);
+        // 找到布局中的各个 View 元素
+        MaterialButton btnCall = findViewById(R.id.btn_call);
+        MaterialButton btnMessage = findViewById(R.id.btn_message);
+        MaterialButton btnShare = findViewById(R.id.btn_share);
+        FloatingActionButton fabEdit = findViewById(R.id.fab_edit);
+        
+        initTextViews();
+        initLayouts();
 
-                // 初始化附加字段
-                tvQQ = findViewById(R.id.tv_qq);
-                tvWechat = findViewById(R.id.tv_wechat);
-                tvWebsite = findViewById(R.id.tv_website);
-                tvBirthday = findViewById(R.id.tv_birthday);
-                tvCompany = findViewById(R.id.tv_company);
-                tvPostalCode = findViewById(R.id.tv_postal_code);
-                tvNotes = findViewById(R.id.tv_notes);
+        // 设置按钮点击监听器
+        setupButtonListeners(btnCall, btnMessage, btnShare, fabEdit, context);
 
-                layoutQQ = findViewById(R.id.layout_qq);
-                layoutWechat = findViewById(R.id.layout_wechat);
-                layoutWebsite = findViewById(R.id.layout_website);
-                layoutBirthday = findViewById(R.id.layout_birthday);
-                layoutCompany = findViewById(R.id.layout_company);
-                layoutPostalCode = findViewById(R.id.layout_postal_code);
-                layoutNotes = findViewById(R.id.layout_notes);
-                layoutMobileNumber = findViewById(R.id.layout_mobile);
-                layoutTelephoneNumber = findViewById(R.id.layout_telephone);
-                layoutEmail = findViewById(R.id.layout_email);
-                layoutAddress = findViewById(R.id.layout_address);
+        // 初始化时清空显示
+        clearContactInfo();
+    }
 
-        // 设置按钮点击监听器，在触发时传递 currentContact 对象
+    /**
+     * 初始化所有TextView组件
+     */
+    private void initTextViews() {
+        tvName = findViewById(R.id.tv_contact_name);
+        tvMobileNumber = findViewById(R.id.tv_mobile_number);
+        tvTelephoneNumber = findViewById(R.id.tv_telephone_number);
+        tvEmail = findViewById(R.id.tv_contact_email);
+        tvAddress = findViewById(R.id.tv_location);
+        contactAvatar = findViewById(R.id.contact_avatar);
+        tvQQ = findViewById(R.id.tv_qq);
+        tvWechat = findViewById(R.id.tv_wechat);
+        tvWebsite = findViewById(R.id.tv_website);
+        tvBirthday = findViewById(R.id.tv_birthday);
+        tvCompany = findViewById(R.id.tv_company);
+        tvPostalCode = findViewById(R.id.tv_postal_code);
+        tvNotes = findViewById(R.id.tv_notes);
+    }
+
+    /**
+     * 初始化所有布局组件
+     */
+    private void initLayouts() {
+        layoutQQ = findViewById(R.id.layout_qq);
+        layoutWechat = findViewById(R.id.layout_wechat);
+        layoutWebsite = findViewById(R.id.layout_website);
+        layoutBirthday = findViewById(R.id.layout_birthday);
+        layoutCompany = findViewById(R.id.layout_company);
+        layoutPostalCode = findViewById(R.id.layout_postal_code);
+        layoutNotes = findViewById(R.id.layout_notes);
+        layoutMobileNumber = findViewById(R.id.layout_mobile);
+        layoutTelephoneNumber = findViewById(R.id.layout_telephone);
+        layoutEmail = findViewById(R.id.layout_email);
+        layoutAddress = findViewById(R.id.layout_address);
+    }
+
+    /**
+     * 设置按钮监听器
+     * 
+     * @param btnCall 拨打电话按钮
+     * @param btnMessage 发送短信按钮
+     * @param btnShare 分享联系人按钮
+     * @param fabEdit 编辑联系人按钮
+     * @param context 上下文
+     */
+    private void setupButtonListeners(MaterialButton btnCall, MaterialButton btnMessage, 
+                                      MaterialButton btnShare, FloatingActionButton fabEdit, 
+                                      Context context) {
+        // 拨打电话按钮
         btnCall.setOnClickListener(v -> {
             if (currentContact != null) {
-                boolean hasMobile = currentContact.getMobileNumber() != null && !currentContact.getMobileNumber().isEmpty();
-                boolean hasTelephone = currentContact.getTelephoneNumber() != null && !currentContact.getTelephoneNumber().isEmpty();
-
-                if (hasMobile && hasTelephone) {
-                    // 同时有手机和座机号码，显示选择对话框
-                    String[] options = new String[]{"手机: " + currentContact.getMobileNumber(),
-                            "座机: " + currentContact.getTelephoneNumber()};
-
-                    new androidx.appcompat.app.AlertDialog.Builder(getContext())
-                            .setTitle("选择拨打号码")
-                            .setItems(options, (dialog, which) -> {
-                                String number = which == 0 ? currentContact.getMobileNumber() : currentContact.getTelephoneNumber();
-                                dialNumber(number);
-                            })
-                            .show();
-                } else if (hasMobile) {
-                    // 只有手机号
-                    dialNumber(currentContact.getMobileNumber());
-                } else if (hasTelephone) {
-                    // 只有座机号
-                    dialNumber(currentContact.getTelephoneNumber());
-                } else {
-                    android.widget.Toast.makeText(getContext(), "无可用电话号码", android.widget.Toast.LENGTH_SHORT).show();
-                }
+                handleCallButton();
             }
         });
 
+        // 发送短信按钮
         btnMessage.setOnClickListener(v -> {
             if (currentContact != null && currentContact.getMobileNumber() != null
                     && !currentContact.getMobileNumber().isEmpty()) {
-                // 直接实现发送短信逻辑
                 Intent intent = new Intent(Intent.ACTION_SENDTO);
                 intent.setData(Uri.parse("smsto:" + currentContact.getMobileNumber()));
                 getContext().startActivity(intent);
             } else {
-                // 提醒用户手机号码为空
-                android.widget.Toast.makeText(getContext(), "无可用手机号",
-                        android.widget.Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "无可用手机号", Toast.LENGTH_SHORT).show();
             }
         });
 
+        // 分享联系人按钮
         btnShare.setOnClickListener(v -> {
             if (currentContact != null) {
-                // 生成联系人信息的二维码并显示
                 generateAndShowQRCode();
             } else {
-                Toast.makeText(getContext(), "没有联系人可分享",
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "没有联系人可分享", Toast.LENGTH_SHORT).show();
             }
         });
 
+        // 编辑联系人按钮
         fabEdit.setOnClickListener(v -> {
             if (currentContact != null) {
-                // 启动编辑联系人页面
                 Intent intent = new Intent(getContext(), ContactEditActivity.class);
-                // 将当前联系人对象传递给编辑页面
                 intent.putExtra("contact", currentContact);
-                // 添加标记表示这是否为"我的名片"
                 intent.putExtra("isMyCard", isMyCard);
 
-                // 如果上下文是Activity，使用startActivityForResult
                 if (context instanceof Activity) {
                     ((Activity) context).startActivityForResult(intent, EDIT_CONTACT_REQUEST_CODE);
                 } else {
-                    // 非Activity上下文直接启动，但无法接收返回结果
                     context.startActivity(intent);
                     Log.w(TAG, "编辑联系人：当前上下文不是Activity，无法接收编辑结果");
                 }
@@ -349,69 +327,97 @@ public class ContactCardView extends FrameLayout {
                 Toast.makeText(getContext(), "没有联系人可编辑", Toast.LENGTH_SHORT).show();
             }
         });
-
-        // 初始化时清空显示，或者显示默认占位符
-        clearContactInfo();
     }
 
+    /**
+     * 处理拨打电话按钮的点击事件
+     */
+    private void handleCallButton() {
+        boolean hasMobile = currentContact.getMobileNumber() != null && !currentContact.getMobileNumber().isEmpty();
+        boolean hasTelephone = currentContact.getTelephoneNumber() != null && !currentContact.getTelephoneNumber().isEmpty();
+
+        if (hasMobile && hasTelephone) {
+            // 同时有手机和座机号码，显示选择对话框
+            String[] options = new String[]{"手机: " + currentContact.getMobileNumber(),
+                    "座机: " + currentContact.getTelephoneNumber()};
+
+            new AlertDialog.Builder(getContext())
+                    .setTitle("选择拨打号码")
+                    .setItems(options, (dialog, which) -> {
+                        String number = which == 0 ? currentContact.getMobileNumber() : currentContact.getTelephoneNumber();
+                        dialNumber(number);
+                    })
+                    .show();
+        } else if (hasMobile) {
+            // 只有手机号
+            dialNumber(currentContact.getMobileNumber());
+        } else if (hasTelephone) {
+            // 只有座机号
+            dialNumber(currentContact.getTelephoneNumber());
+        } else {
+            Toast.makeText(getContext(), "无可用电话号码", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 清除联系人信息显示
+     */
     public void clearContactInfo() {
-
-        // 清除基本字段
+        // 清除姓名和头像
         if (tvName != null) tvName.setText("");
-        if (tvMobileNumber != null) {
-            tvMobileNumber.setText("");
-            tvMobileNumber.setVisibility(View.GONE);
-        }
-        if (tvTelephoneNumber != null) {
-            tvTelephoneNumber.setText("");
-            tvTelephoneNumber.setVisibility(View.GONE);
-        }
-        if (tvEmail != null) {
-            tvEmail.setText("");
-            tvEmail.setVisibility(View.GONE);
-        }
-        if (tvAddress != null) {
-            tvAddress.setText("");
-            tvAddress.setVisibility(View.GONE);
-        }
         if (contactAvatar != null) contactAvatar.setImageResource(R.drawable.ic_person);
-        // 清除新增字段并隐藏
-        if (tvQQ != null) tvQQ.setText("");
-        if (tvWechat != null) tvWechat.setText("");
-        if (tvWebsite != null) tvWebsite.setText("");
-        if (tvBirthday != null) tvBirthday.setText("");
-        if (tvCompany != null) tvCompany.setText("");
-        if (tvPostalCode != null) tvPostalCode.setText("");
-        if (tvNotes != null) tvNotes.setText("");
-
-        if (layoutQQ != null) layoutQQ.setVisibility(View.GONE);
-        if (layoutWechat != null) layoutWechat.setVisibility(View.GONE);
-        if (layoutWebsite != null) layoutWebsite.setVisibility(View.GONE);
-        if (layoutBirthday != null) layoutBirthday.setVisibility(View.GONE);
-        if (layoutCompany != null) layoutCompany.setVisibility(View.GONE);
-        if (layoutPostalCode != null) layoutPostalCode.setVisibility(View.GONE);
-        if (layoutNotes != null) layoutNotes.setVisibility(View.GONE);
+        
+        // 清除并隐藏所有字段
+        clearAndHideField(tvMobileNumber, layoutMobileNumber);
+        clearAndHideField(tvTelephoneNumber, layoutTelephoneNumber);
+        clearAndHideField(tvEmail, layoutEmail);
+        clearAndHideField(tvAddress, layoutAddress);
+        clearAndHideField(tvQQ, layoutQQ);
+        clearAndHideField(tvWechat, layoutWechat);
+        clearAndHideField(tvWebsite, layoutWebsite);
+        clearAndHideField(tvBirthday, layoutBirthday);
+        clearAndHideField(tvCompany, layoutCompany);
+        clearAndHideField(tvPostalCode, layoutPostalCode);
+        clearAndHideField(tvNotes, layoutNotes);
     }
 
+    /**
+     * 清除文本并隐藏视图
+     * 
+     * @param textView 文本视图
+     * @param layout 布局容器
+     */
+    private void clearAndHideField(TextView textView, View layout) {
+        if (textView != null) textView.setText("");
+        if (layout != null) layout.setVisibility(View.GONE);
+    }
+
+    /**
+     * 拨打电话号码
+     * 
+     * @param phoneNumber 要拨打的电话号码
+     */
     private void dialNumber(String phoneNumber) {
         Intent intent = new Intent(Intent.ACTION_DIAL);
         intent.setData(Uri.parse("tel:" + phoneNumber.replaceAll("[^0-9]", "")));
         getContext().startActivity(intent);
     }
 
-    // 供宿主Activity调用，处理编辑结果
+    /**
+     * 处理联系人编辑返回结果
+     * 
+     * @param requestCode 请求码
+     * @param resultCode 结果码
+     * @param data 返回的数据
+     */
     public void handleActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == EDIT_CONTACT_REQUEST_CODE && resultCode == Activity.RESULT_OK && data != null) {
             Contact updatedContact = (Contact) data.getSerializableExtra("updatedContact");
             if (updatedContact != null) {
-                // 更新当前显示的联系人
                 setContact(updatedContact);
-
-                // 通知监听器联系人已更新
                 if (contactUpdatedListener != null) {
                     contactUpdatedListener.onContactUpdated(updatedContact);
                 }
-
                 Log.d(TAG, "联系人已更新: " + updatedContact.getName());
             }
         }
@@ -422,11 +428,8 @@ public class ContactCardView extends FrameLayout {
      */
     private void generateAndShowQRCode() {
         try {
-            // 使用QRCodeUtils实例生成联系人二维码
             Bitmap qrCodeBitmap = qrCodeUtil.generateContactQRCode(currentContact, 600);
-
             if (qrCodeBitmap != null) {
-                // 显示包含二维码的对话框
                 showQRCodeDialog(qrCodeBitmap);
             } else {
                 Toast.makeText(getContext(), "生成二维码失败", Toast.LENGTH_SHORT).show();
@@ -440,48 +443,41 @@ public class ContactCardView extends FrameLayout {
 
     /**
      * 显示包含二维码的对话框
+     * 
      * @param qrCodeBitmap 二维码位图
      */
     private void showQRCodeDialog(Bitmap qrCodeBitmap) {
-        // 创建对话框布局
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_qr_code, null);
-
-        // 设置二维码图片
         ImageView imgQrCode = dialogView.findViewById(R.id.img_qr_code);
         imgQrCode.setImageBitmap(qrCodeBitmap);
 
-        // 设置标题
         TextView tvDialogTitle = dialogView.findViewById(R.id.tv_dialog_title);
         tvDialogTitle.setText("扫描二维码添加 " + currentContact.getName() + " 的联系信息");
 
-        // 创建对话框
         AlertDialog dialog = new AlertDialog.Builder(getContext())
                 .setView(dialogView)
                 .create();
 
-        // 设置保存按钮点击事件
         dialogView.findViewById(R.id.btn_save_qr_code).setOnClickListener(v -> {
             saveQRCodeToGallery(qrCodeBitmap);
         });
 
-        // 设置关闭按钮点击事件
         dialogView.findViewById(R.id.btn_close).setOnClickListener(v -> {
             dialog.dismiss();
         });
 
-        // 显示对话框
         dialog.show();
     }
 
     /**
      * 保存二维码到相册
+     * 
      * @param bitmap 要保存的二维码位图
      */
     private void saveQRCodeToGallery(Bitmap bitmap) {
         String fileName = "联系人_" + currentContact.getName() + "_"
                 + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".png";
 
-        // 根据Android版本使用不同的保存方法
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             saveImageWithMediaStore(bitmap, fileName);
         } else {
@@ -491,6 +487,9 @@ public class ContactCardView extends FrameLayout {
 
     /**
      * 使用MediaStore API保存图片（Android 10及以上）
+     * 
+     * @param bitmap 要保存的位图
+     * @param fileName 文件名
      */
     private void saveImageWithMediaStore(Bitmap bitmap, String fileName) {
         ContentValues values = new ContentValues();
@@ -514,6 +513,9 @@ public class ContactCardView extends FrameLayout {
 
     /**
      * 保存图片到旧版存储（Android 9及以下）
+     * 
+     * @param bitmap 要保存的位图
+     * @param fileName 文件名
      */
     private void saveImageToLegacyStorage(Bitmap bitmap, String fileName) {
         try {

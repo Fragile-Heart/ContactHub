@@ -17,18 +17,34 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * 联系人复选框适配器，用于选择多个联系人
+ */
 public class ContactCheckboxAdapter extends RecyclerView.Adapter<ContactCheckboxAdapter.ViewHolder> {
 
     private final List<Contact> contacts; // 所有联系人
     private final List<Contact> filteredContacts; // 过滤后的联系人
-    private final Set<Integer> selectedContactIds;
+    private final Set<Integer> selectedContactIds; // 已选择的联系人ID集合
 
+    /**
+     * 构造函数
+     *
+     * @param contacts 联系人列表
+     * @param groupMemberIds 群组成员ID列表，用于预选中已在群组中的联系人
+     */
     public ContactCheckboxAdapter(List<Contact> contacts, List<Integer> groupMemberIds) {
         this.contacts = contacts;
         this.filteredContacts = new ArrayList<>(contacts);
         this.selectedContactIds = new HashSet<>(groupMemberIds != null ? groupMemberIds : new ArrayList<>());
     }
 
+    /**
+     * 创建ViewHolder
+     *
+     * @param parent 父视图组
+     * @param viewType 视图类型
+     * @return 新创建的ViewHolder
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -37,6 +53,12 @@ public class ContactCheckboxAdapter extends RecyclerView.Adapter<ContactCheckbox
         return new ViewHolder(view);
     }
 
+    /**
+     * 绑定视图数据
+     *
+     * @param holder 视图持有者
+     * @param position 项目在列表中的位置
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Contact contact = filteredContacts.get(position);
@@ -67,17 +89,28 @@ public class ContactCheckboxAdapter extends RecyclerView.Adapter<ContactCheckbox
         });
     }
 
+    /**
+     * 获取项目数量
+     *
+     * @return 过滤后的联系人列表大小
+     */
     @Override
     public int getItemCount() {
         return filteredContacts.size();
     }
 
+    /**
+     * 获取已选择的联系人ID列表
+     *
+     * @return 已选择联系人ID的列表
+     */
     public List<Integer> getSelectedContactIds() {
         return new ArrayList<>(selectedContactIds);
     }
 
     /**
-     * 过滤联系人列表
+     * 根据关键词过滤联系人列表
+     *
      * @param query 搜索关键词
      */
     public void filter(String query) {
@@ -99,17 +132,24 @@ public class ContactCheckboxAdapter extends RecyclerView.Adapter<ContactCheckbox
                 } else if (contact.getEmail() != null && contact.getEmail().toLowerCase().contains(lowerCaseQuery)) {
                     filteredContacts.add(contact);
                 }
-                // 可以添加更多搜索字段，如公司、地址等
             }
         }
         
         notifyDataSetChanged();
     }
 
+    /**
+     * 联系人复选框视图持有者
+     */
     static class ViewHolder extends RecyclerView.ViewHolder {
         final CheckBox checkboxContact;
         final TextView tvContactName;
 
+        /**
+         * 构造函数
+         *
+         * @param itemView 项目视图
+         */
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             checkboxContact = itemView.findViewById(R.id.checkbox_contact);

@@ -24,24 +24,26 @@ public class ContactDetailActivity extends AppCompatActivity implements ContactC
 
     private ContactCardView contactCardView;
     private Contact contact;
-
     private FileUtil fileUtil;
+
+    /**
+     * 初始化Activity，设置UI组件并获取联系人数据
+     * 
+     * @param savedInstanceState 保存的实例状态
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_contact);
 
-        // 修改为使用正确的Toolbar类型
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // 初始化联系人卡片视图
         contactCardView = findViewById(R.id.contact_card_view);
         contactCardView.setOnContactUpdatedListener(this);
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        // 获取传递过来的联系人
         if (getIntent().hasExtra("contact")) {
             contact = (Contact) getIntent().getSerializableExtra("contact");
             displayContactDetails();
@@ -51,20 +53,14 @@ public class ContactDetailActivity extends AppCompatActivity implements ContactC
         }
 
         findViewById(R.id.btn_delete_contact).setOnClickListener(v -> {
-            // 点击事件处理
-
             new AlertDialog.Builder(this)
                 .setTitle("删除联系人")
                 .setMessage("确定要删除此联系人吗？")
                 .setPositiveButton("是", (dialog, which) -> {
-                    // 删除联系人逻辑
                     fileUtil = new FileUtil(this);
-                    //fileUtil.deleteContact(contact.getId());
                     Contact[] contacts = fileUtil.readFile("contacts.json", Contact[].class);
                     List<Contact> contactList = new ArrayList<>(Arrays.asList(contacts));
-                    // 从列表中移除当前联系人
                     contactList.removeIf(c -> Objects.equals(c.getId(), contact.getId()));
-                    // 将更新后的列表保存回文件
                     Contact[] updatedContacts = contactList.toArray(new Contact[0]);
                     fileUtil.saveJSON(updatedContacts, "contacts.json");
                     Toast.makeText(this, "联系人已删除", Toast.LENGTH_SHORT).show();
@@ -75,40 +71,53 @@ public class ContactDetailActivity extends AppCompatActivity implements ContactC
         });
     }
 
+    /**
+     * 在视图中显示联系人详细信息
+     */
     private void displayContactDetails() {
         if (contact != null) {
-            // 在卡片视图中显示联系人详情
             contactCardView.setContact(contact);
         }
     }
 
+    /**
+     * 处理菜单项选择事件
+     * 
+     * @param item 被点击的菜单项
+     * @return 如果事件已处理则返回true，否则返回父类处理结果
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            // 使用 finish() 替代 onBackPressed()
             finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * 处理Activity结果
+     * 
+     * @param requestCode 请求码
+     * @param resultCode 结果码
+     * @param data 返回的数据
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        
-        // 将结果传递给ContactCardView处理
         contactCardView.handleActivityResult(requestCode, resultCode, data);
     }
 
+    /**
+     * 联系人更新回调方法
+     * 
+     * @param updatedContact 更新后的联系人对象
+     */
     @Override
     public void onContactUpdated(Contact updatedContact) {
-        // 联系人已更新，更新当前页面的联系人对象
         this.contact = updatedContact;
-        
-        // 更新标题
         setTitle(updatedContact.getName());
         
-        // 将更新后的联系人传回给启动此Activity的页面
         Intent resultIntent = new Intent();
         resultIntent.putExtra("updatedContact", updatedContact);
         setResult(RESULT_OK, resultIntent);

@@ -35,13 +35,17 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
+/**
+ * 二维码处理工具类，提供联系人信息与二维码之间的转换功能
+ */
 public class QRCodeUtil {
-    private static final String TAG = "QRCodeUtils";
+    private static final String TAG = "QRCodeUtil";
     private final Context context;
 
     /**
      * 构造函数
-     * @param context 应用上下文
+     * 
+     * @param context 应用上下文，用于访问应用资源和服务
      */
     public QRCodeUtil(Context context) {
         this.context = context;
@@ -49,6 +53,10 @@ public class QRCodeUtil {
 
     /**
      * 将联系人对象转换为JSON字符串，使用UTF-8编码
+     * 
+     * @param contact 需要转换的联系人对象
+     * @return 包含联系人信息的JSON字符串
+     * @throws JSONException 当JSON转换过程中出错时抛出
      */
     public String contactToJson(Contact contact) throws JSONException {
         JSONObject contactJson = new JSONObject();
@@ -66,20 +74,21 @@ public class QRCodeUtil {
             contactJson.put("postalCode", contact.getPostalCode() != null ? contact.getPostalCode() : "");
             contactJson.put("notes", contact.getNotes() != null ? contact.getNotes() : "");
             
-            String jsonString = contactJson.toString();
-            Log.d(TAG, "生成的联系人JSON数据长度: " + jsonString.length());
-            return jsonString;
+            return contactJson.toString();
         } catch (JSONException e) {
-            Log.e(TAG, "创建联系人JSON时出错: " + e.getMessage(), e);
+            Log.e(TAG, "创建联系人JSON时出错: " + e.getMessage());
             throw e;
         }
     }
 
     /**
      * 从JSON字符串转换为联系人对象
+     * 
+     * @param jsonStr 包含联系人信息的JSON字符串
+     * @return 解析后的联系人对象
+     * @throws JSONException 当JSON解析过程中出错时抛出
      */
     public Contact jsonToContact(String jsonStr) throws JSONException {
-        Log.d(TAG, "解析联系人JSON数据长度: " + jsonStr.length());
         try {
             JSONObject jsonObject = new JSONObject(jsonStr);
             Contact contact = new Contact();
@@ -98,16 +107,17 @@ public class QRCodeUtil {
             contact.setGroupIds(new ArrayList<>());
             return contact;
         } catch (JSONException e) {
-            Log.e(TAG, "解析联系人JSON时出错: " + e.getMessage(), e);
+            Log.e(TAG, "解析联系人JSON时出错: " + e.getMessage());
             throw e;
         }
     }
 
     /**
      * 生成包含指定内容的二维码
-     * @param content 要编码的内容
+     * 
+     * @param content 要编码的内容字符串
      * @param size 生成二维码的大小(像素)
-     * @return 二维码位图
+     * @return 二维码位图，如果生成失败则返回null
      */
     public Bitmap generateQRCode(String content, int size) {
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
@@ -118,42 +128,40 @@ public class QRCodeUtil {
             hints.put(com.google.zxing.EncodeHintType.MARGIN, 1); // 最小边距以最大化内容
             hints.put(com.google.zxing.EncodeHintType.ERROR_CORRECTION, com.google.zxing.qrcode.decoder.ErrorCorrectionLevel.H); // 最高错误校正
             
-            // 对于较大的数据，可能需要更大的尺寸
-            int adjustedSize = size;
-            if (content.length() > 1000) {
-                // 如果内容很长，增加QR码大小以确保可读性
-                adjustedSize = Math.max(size, 800);
-                Log.d(TAG, "内容较大，调整QR码尺寸: " + adjustedSize);
-            }
+            // 对于较大的数据，调整二维码大小
+            int adjustedSize = content.length() > 1000 ? Math.max(size, 800) : size;
             
             BitMatrix bitMatrix = multiFormatWriter.encode(content, BarcodeFormat.QR_CODE, adjustedSize, adjustedSize, hints);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
-            Log.d(TAG, "成功生成QR码，内容长度: " + content.length() + ", 尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-            return bitmap;
+            return barcodeEncoder.createBitmap(bitMatrix);
         } catch (WriterException e) {
-            Log.e(TAG, "生成二维码失败: " + e.getMessage(), e);
+            Log.e(TAG, "生成二维码失败: " + e.getMessage());
             return null;
         }
     }
 
     /**
      * 从联系人对象生成二维码
+     * 
+     * @param contact 需要转换为二维码的联系人对象
+     * @param size 生成二维码的大小(像素)
+     * @return 包含联系人信息的二维码位图，如果生成失败则返回null
      */
     public Bitmap generateContactQRCode(Contact contact, int size) {
         try {
             String jsonContent = contactToJson(contact);
-            Log.d(TAG, "生成QR的JSON内容长度: " + jsonContent.length()); // 记录生成的JSON内容长度
-
             return generateQRCode(jsonContent, size);
         } catch (JSONException e) {
-            Log.e(TAG, "生成联系人JSON信息失败: " + e.getMessage(), e);
+            Log.e(TAG, "生成联系人JSON信息失败: " + e.getMessage());
             return null;
         }
     }
 
     /**
      * 解码二维码图片
+     * 
+     * @param bitmap 包含二维码的位图
+     * @return 解码后的二维码内容字符串，如果解码失败则返回null
      */
     public String decodeQRCode(Bitmap bitmap) {
         int width = bitmap.getWidth();
@@ -165,23 +173,24 @@ public class QRCodeUtil {
         BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
 
         Map<DecodeHintType, Object> hints = new EnumMap<>(DecodeHintType.class);
-        hints.put(DecodeHintType.POSSIBLE_FORMATS, Collections.singletonList(com.google.zxing.BarcodeFormat.QR_CODE));
+        hints.put(DecodeHintType.POSSIBLE_FORMATS, Collections.singletonList(BarcodeFormat.QR_CODE));
         hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
         hints.put(DecodeHintType.CHARACTER_SET, StandardCharsets.UTF_8.name());
 
         try {
             Result result = new MultiFormatReader().decode(binaryBitmap, hints);
-            String resultText = result.getText();
-            Log.d(TAG, "解码QR内容长度: " + (resultText != null ? resultText.length() : 0)); // 记录解码结果长度
-            return resultText;
+            return result.getText();
         } catch (NotFoundException e) {
-            Log.e(TAG, "二维码解析失败: " + e.getMessage(), e);
+            Log.e(TAG, "二维码解析失败: " + e.getMessage());
             return null;
         }
     }
 
     /**
      * 从Uri加载图片并解析二维码
+     * 
+     * @param imageUri 二维码图片的Uri
+     * @return 解码后的二维码内容字符串，如果解码失败则返回null
      */
     public String decodeQRCodeFromUri(Uri imageUri) {
         try {
@@ -194,13 +203,15 @@ public class QRCodeUtil {
                 return decodeQRCode(bitmap);
             }
         } catch (Exception e) {
-            Log.e(TAG, "从Uri解析二维码失败", e);
+            Log.e(TAG, "从Uri解析二维码失败: " + e.getMessage());
         }
         return null;
     }
 
     /**
      * 配置并启动二维码扫描
+     * 
+     * @param launcher 用于启动扫描活动的ActivityResultLauncher
      */
     public void launchQRCodeScanner(ActivityResultLauncher<ScanOptions> launcher) {
         ScanOptions options = new ScanOptions()
@@ -215,6 +226,10 @@ public class QRCodeUtil {
 
     /**
      * 在活动中创建二维码扫描结果处理器
+     * 
+     * @param activity 关联的FragmentActivity
+     * @param callback 扫描结果回调接口
+     * @return 配置好的ActivityResultLauncher，用于启动扫描
      */
     public static ActivityResultLauncher<ScanOptions> createQRScannerLauncher(
             FragmentActivity activity, QRScanResultCallback callback) {
@@ -233,7 +248,16 @@ public class QRCodeUtil {
      * 二维码扫描结果回调接口
      */
     public interface QRScanResultCallback {
+        /**
+         * 扫描成功时调用
+         * 
+         * @param qrContent 扫描到的二维码内容
+         */
         void onScanSuccess(String qrContent);
+        
+        /**
+         * 扫描被取消时调用
+         */
         void onScanCancelled();
     }
 }

@@ -43,12 +43,18 @@ public class SettingFragment extends Fragment {
     private ActivityResultLauncher<Intent> saveFileLauncher;
     private ActivityResultLauncher<String[]> openFileLauncher;
 
-    // 添加显示设置的常量
+    // 显示设置的常量
     private static final String PREFS_NAME = "ContactDisplayPrefs";
     private static final String KEY_SHOW_MOBILE = "show_mobile";
     private static final String KEY_SHOW_TELEPHONE = "show_telephone";
     private static final String KEY_SHOW_ADDRESS = "show_address";
 
+    /**
+     * Fragment创建时的初始化
+     * 注册文件操作的结果处理器
+     * 
+     * @param savedInstanceState 保存的状态数据
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,12 +83,27 @@ public class SettingFragment extends Fragment {
         );
     }
 
+    /**
+     * 创建Fragment视图
+     * 
+     * @param inflater 用于加载布局的LayoutInflater
+     * @param container 视图的父容器
+     * @param savedInstanceState 保存的状态数据
+     * @return 创建的视图
+     */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentSettingBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
+    /**
+     * 视图创建完成后的初始化
+     * 设置各按钮的点击事件监听器
+     * 
+     * @param view 创建的视图
+     * @param savedInstanceState 保存的状态数据
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -90,24 +111,24 @@ public class SettingFragment extends Fragment {
         binding.buttonImportContacts.setOnClickListener(v ->
                 openFileLauncher.launch(new String[]{
                         "text/csv",
-                        "text/plain",            // 增加plain文本支持
+                        "text/plain",
                         "text/comma-separated-values",
-                        "application/csv",       // 增加应用类型
-                        "application/vnd.ms-excel",  // 一些系统CSV关联Excel
+                        "application/csv",
+                        "application/vnd.ms-excel",
                         "text/x-vcard",
                         "text/vcard",
                         "application/vnd.ms-outlook"})
         );
 
         binding.buttonExportContacts.setOnClickListener(v -> showExportOptions());
-
-        // 添加联系人显示设置点击事件
         binding.buttonContactDisplaySettings.setOnClickListener(v -> showContactDisplaySettings());
-
-        // 添加批量删除联系人点击事件
         binding.buttonBatchDeleteContacts.setOnClickListener(v -> showBatchDeleteContacts());
     }
 
+    /**
+     * 显示导出格式选择对话框
+     * 用户可选择CSV或vCard格式导出联系人
+     */
     private void showExportOptions() {
         String[] formats = {"CSV格式", "vCard格式"};
 
@@ -124,17 +145,20 @@ public class SettingFragment extends Fragment {
         builder.create().show();
     }
 
+    /**
+     * 导出联系人数据
+     * 将联系人转换为指定格式并准备导出
+     * 
+     * @param format 导出格式，"csv"或"vcard"
+     */
     private void exportContacts(String format) {
         FileUtil fileUtil = new FileUtil(requireContext());
-
-        // 获取联系人数据
         String contactsJson = fileUtil.readFile("contacts.json");
         if (contactsJson == null) {
             showToast("无法读取联系人数据");
             return;
         }
 
-        // 根据选择的格式生成文件内容
         String exportFileExtension;
         String exportMimeType;
         try {
@@ -147,13 +171,12 @@ public class SettingFragment extends Fragment {
                 exportMimeType = "text/x-vcard";
                 exportFileExtension = ".vcf";
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             Log.e(TAG, "转换联系人失败", e);
             showToast("转换联系人失败: " + e.getMessage());
             return;
         }
 
-        // 使用SAF让用户选择保存位置
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType(exportMimeType);
@@ -162,7 +185,12 @@ public class SettingFragment extends Fragment {
         saveFileLauncher.launch(intent);
     }
 
-
+    /**
+     * 将内容写入指定URI
+     * 用于完成导出联系人的文件写入
+     * 
+     * @param uri 目标文件URI
+     */
     private void writeContentToUri(Uri uri) {
         try {
             OutputStream outputStream = requireContext().getContentResolver().openOutputStream(uri);
@@ -177,15 +205,23 @@ public class SettingFragment extends Fragment {
         }
     }
 
+    /**
+     * 显示Toast消息
+     * 
+     * @param message 要显示的消息
+     */
     private void showToast(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
-
-    // 添加导入联系人的方法
+    /**
+     * 从URI导入联系人
+     * 读取并解析不同格式的联系人文件
+     * 
+     * @param uri 联系人文件的URI
+     */
     private void importContactsFromUri(Uri uri) {
         try {
-            // 获取文件名以确定文件类型
             String fileName = getFileNameFromUri(uri);
             String mimeType = requireContext().getContentResolver().getType(uri);
             String fileContent = readTextFromUri(uri);
@@ -195,20 +231,16 @@ public class SettingFragment extends Fragment {
                 return;
             }
 
-            // 解析联系人
             List<Contact> contacts;
 
-            // 先根据文件扩展名判断
             if (fileName.toLowerCase().endsWith(".csv") ||
                 (mimeType != null && (
                     mimeType.contains("csv") ||
                     mimeType.contains("comma") ||
                     mimeType.equals("text/plain")))) {
 
-                // 对于text/plain，检查内容是否符合CSV格式
                 if (mimeType != null && mimeType.equals("text/plain") &&
                     !fileContent.contains(",") && !fileName.toLowerCase().endsWith(".csv")) {
-                    // 不像CSV文件，尝试作为vCard处理
                     contacts = ContactIOUtil.parseContactsFromVCard(fileContent);
                 } else {
                     contacts = ContactIOUtil.parseContactsFromCSV(fileContent);
@@ -238,7 +270,6 @@ public class SettingFragment extends Fragment {
                 return;
             }
 
-            // 保存联系人
             saveImportedContacts(contacts);
 
         } catch (Exception e) {
@@ -247,6 +278,12 @@ public class SettingFragment extends Fragment {
         }
     }
 
+    /**
+     * 从URI获取文件名
+     * 
+     * @param uri 文件URI
+     * @return 文件名
+     */
     private String getFileNameFromUri(Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
@@ -271,6 +308,13 @@ public class SettingFragment extends Fragment {
         return result;
     }
 
+    /**
+     * 从URI读取文本内容
+     * 
+     * @param uri 文件URI
+     * @return 文件内容字符串
+     * @throws IOException 读取失败时抛出异常
+     */
     private String readTextFromUri(Uri uri) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
         try (InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
@@ -283,6 +327,12 @@ public class SettingFragment extends Fragment {
         return stringBuilder.toString();
     }
 
+    /**
+     * 保存导入的联系人
+     * 合并现有联系人列表与新导入的联系人
+     * 
+     * @param newContacts 新导入的联系人列表
+     */
     private void saveImportedContacts(List<Contact> newContacts) {
         FileUtil fileUtil = new FileUtil(requireContext());
         String contactsJson = fileUtil.readFile("contacts.json");
@@ -320,7 +370,10 @@ public class SettingFragment extends Fragment {
         }
     }
 
-    // 显示联系人显示设置对话框
+    /**
+     * 显示联系人显示设置对话框
+     * 控制联系人信息显示的选项
+     */
     private void showContactDisplaySettings() {
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean showMobile = prefs.getBoolean(KEY_SHOW_MOBILE, true);
@@ -352,6 +405,7 @@ public class SettingFragment extends Fragment {
 
     /**
      * 显示批量删除联系人对话框
+     * 允许用户选择多个联系人进行删除
      */
     private void showBatchDeleteContacts() {
         FileUtil fileUtil = new FileUtil(requireContext());
@@ -362,7 +416,6 @@ public class SettingFragment extends Fragment {
             return;
         }
 
-        // 解析联系人数据
         Type contactListType = new TypeToken<List<Contact>>(){}.getType();
         List<Contact> contacts = new Gson().fromJson(contactsJson, contactListType);
 
@@ -371,16 +424,14 @@ public class SettingFragment extends Fragment {
             return;
         }
 
-        // 准备多选对话框的数据
         String[] contactNames = new String[contacts.size()];
         boolean[] checkedItems = new boolean[contacts.size()];
 
         for (int i = 0; i < contacts.size(); i++) {
             contactNames[i] = contacts.get(i).getName();
-            checkedItems[i] = false; // 默认不选中
+            checkedItems[i] = false;
         }
 
-        // 创建并显示多选对话框
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("选择要删除的联系人")
                .setMultiChoiceItems(contactNames, checkedItems, (dialog, which, isChecked) -> {
@@ -396,16 +447,16 @@ public class SettingFragment extends Fragment {
     
     /**
      * 删除选中的联系人
+     * 二次确认后执行删除操作
+     * 
      * @param contacts 所有联系人列表
-     * @param checkedItems 选中状态数组
+     * @param checkedItems 联系人选中状态数组
      */
     private void deleteSelectedContacts(List<Contact> contacts, boolean[] checkedItems) {
-        // 确认删除对话框
         AlertDialog.Builder confirmBuilder = new AlertDialog.Builder(requireContext());
         confirmBuilder.setTitle("确认删除")
                       .setMessage("确定要删除选中的联系人吗？此操作不可撤销。")
                       .setPositiveButton("确定", (dialog, which) -> {
-                          // 执行删除操作
                           List<Contact> remainingContacts = new ArrayList<>();
                           int deleteCount = 0;
                           
@@ -417,13 +468,11 @@ public class SettingFragment extends Fragment {
                               }
                           }
                           
-                          // 如果没有选中任何联系人
                           if (deleteCount == 0) {
                               showToast("未选择任何联系人");
                               return;
                           }
                           
-                          // 保存剩余的联系人列表
                           String updatedJson = new Gson().toJson(remainingContacts);
                           try {
                               FileOutputStream fos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);

@@ -5,7 +5,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -60,13 +59,24 @@ public class GroupFragment extends Fragment {
     // 保存ItemTouchHelper实例以便手动控制
     private ItemTouchHelper itemTouchHelper;
 
+    /**
+     * 创建Fragment视图
+     * @param inflater 布局填充器
+     * @param container 父容器
+     * @param savedInstanceState 保存的状态
+     * @return 创建的视图
+     */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // 使用视图绑定初始化布局
         binding = FragmentGroupBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
+    /**
+     * 视图创建完成后的回调
+     * @param view 创建的视图
+     * @param savedInstanceState 保存的状态
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -84,10 +94,12 @@ public class GroupFragment extends Fragment {
         setupSwipeToDelete();
     }
 
-    // 设置滑动删除功能
+    /**
+     * 设置滑动删除功能
+     * 实现左滑显示删除和管理按钮
+     */
     private void setupSwipeToDelete() {
         ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            private final ColorDrawable background = new ColorDrawable(Color.RED);
             private final Paint textPaint = new Paint();
 
             {
@@ -113,9 +125,6 @@ public class GroupFragment extends Fragment {
 
                 // 更新当前打开的项
                 currentOpenPosition = position;
-
-                // 不再立即恢复原来的视图，让按钮保持显示
-                // 我们在其他地方处理关闭操作
             }
 
             @Override
@@ -252,15 +261,20 @@ public class GroupFragment extends Fragment {
 
             @Override
             public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                // 不需要实现
             }
 
             @Override
             public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+                // 不需要实现
             }
         });
     }
 
-    // 关闭已滑动打开的项
+    /**
+     * 关闭已滑动打开的项
+     * @param position 要关闭的项的位置
+     */
     private void closeItem(int position) {
         if (position >= 0 && position < groups.size()) {
             groupAdapter.notifyItemChanged(position);
@@ -269,7 +283,11 @@ public class GroupFragment extends Fragment {
         }
     }
 
-    // 显示删除确认对话框
+    /**
+     * 显示删除确认对话框
+     * @param groupToDelete 要删除的分组
+     * @param position 分组在列表中的位置
+     */
     private void showDeleteConfirmDialog(Group groupToDelete, int position) {
         new AlertDialog.Builder(requireContext())
                 .setTitle("删除分组")
@@ -289,7 +307,11 @@ public class GroupFragment extends Fragment {
                 .show();
     }
 
-    // 删除分组
+    /**
+     * 删除分组及其关联信息
+     * @param groupToDelete 要删除的分组
+     * @param position 分组在列表中的位置
+     */
     private void deleteGroup(Group groupToDelete, int position) {
         try {
             int groupId = groupToDelete.getId();
@@ -337,14 +359,18 @@ public class GroupFragment extends Fragment {
         }
     }
 
-    // 显示管理分组对话框
+    /**
+     * 显示管理分组对话框
+     * @param group 要管理的分组
+     * @param position 分组在列表中的位置
+     */
     private void showManageGroupDialog(Group group, int position) {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.dialog_manage_group, null);
         dialog.setContentView(view);
 
         TextInputEditText etGroupName = view.findViewById(R.id.et_group_name);
-        TextInputEditText etSearch = view.findViewById(R.id.et_search); // 获取搜索框引用
+        TextInputEditText etSearch = view.findViewById(R.id.et_search);
         RecyclerView recyclerContacts = view.findViewById(R.id.recycler_contacts);
         MaterialButton btnCancel = view.findViewById(R.id.btn_cancel);
         MaterialButton btnSave = view.findViewById(R.id.btn_save);
@@ -408,7 +434,13 @@ public class GroupFragment extends Fragment {
         dialog.show();
     }
 
-    // 更新分组名称和成员
+    /**
+     * 更新分组名称和成员
+     * @param group 要更新的分组
+     * @param newName 新的分组名称
+     * @param selectedContactIds 选中的联系人ID列表
+     * @param position 分组在列表中的位置
+     */
     private void updateGroupAndMembers(Group group, String newName, List<Integer> selectedContactIds, int position) {
         try {
             // 更新内存中的分组名称
@@ -474,16 +506,20 @@ public class GroupFragment extends Fragment {
         }
     }
 
+    /**
+     * Fragment恢复可见状态时重新加载数据
+     */
     @Override
     public void onResume() {
         super.onResume();
-        // 在Fragment恢复可见状态时重新加载数据
         // 确保当联系人数据被修改后，分组视图也能反映最新变化
         loadDataAndUpdateUI();
         Log.d("GroupFragment", "onResume: 重新加载分组数据");
     }
 
-    // 显示添加分组对话框
+    /**
+     * 显示添加分组对话框
+     */
     private void showAddGroupDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.dialog_add_group_bottom_sheet, null);
@@ -508,41 +544,46 @@ public class GroupFragment extends Fragment {
         dialog.show();
     }
 
-    // 添加新分组
+    /**
+     * 添加新分组
+     * @param groupName 新分组的名称
+     */
     private void addNewGroup(String groupName) {
-      try {
-                // 创建新分组对象 (使用默认ID 0，后续会生成正确的ID)
-                Group newGroup = new Group(0, false, groupName);
-                newGroup.generateNewId(requireContext());
+        try {
+            // 创建新分组对象 (使用默认ID 0，后续会生成正确的ID)
+            Group newGroup = new Group(0, false, groupName);
+            newGroup.generateNewId(requireContext());
 
-                // 读取现有分组并添加新分组
-                List<Group> groups = new ArrayList<>(loadGroups());
-                groups.add(newGroup);
+            // 读取现有分组并添加新分组
+            List<Group> groups = new ArrayList<>(loadGroups());
+            groups.add(newGroup);
 
-                // 保存到文件
-                Group[] groupArray = groups.toArray(new Group[0]);
-                String json = new Gson().toJson(groupArray);
+            // 保存到文件
+            Group[] groupArray = groups.toArray(new Group[0]);
+            String json = new Gson().toJson(groupArray);
 
-                FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
-                fos.write(json.getBytes());
-                fos.close();
+            FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
+            fos.write(json.getBytes());
+            fos.close();
 
-                // 刷新UI显示新的分组
-                loadDataAndUpdateUI();
+            // 刷新UI显示新的分组
+            loadDataAndUpdateUI();
 
-                Toast.makeText(requireContext(), "分组 '" + groupName + "' 创建成功", Toast.LENGTH_SHORT).show();
-                Log.d("GroupFragment", "新分组已创建: " + groupName + ", ID: " + newGroup.getId());
-            } catch (Exception e) {
-                Log.e("GroupFragment", "创建分组失败", e);
-                Toast.makeText(requireContext(), "创建分组失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-      }
+            Toast.makeText(requireContext(), "分组 '" + groupName + "' 创建成功", Toast.LENGTH_SHORT).show();
+            Log.d("GroupFragment", "新分组已创建: " + groupName + ", ID: " + newGroup.getId());
+        } catch (Exception e) {
+            Log.e("GroupFragment", "创建分组失败", e);
+            Toast.makeText(requireContext(), "创建分组失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
 
-    // 加载数据并更新UI的方法
+    /**
+     * 加载数据并更新UI
+     */
     private void loadDataAndUpdateUI() {
         // 加载数据
         List<Contact> contacts = loadContacts();
-        groups = new ArrayList<>(loadGroups());  // 将groups保存为类成员变量
+        groups = new ArrayList<>(loadGroups());
 
         // 设置RecyclerView
         binding.recyclerGroups.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -550,7 +591,10 @@ public class GroupFragment extends Fragment {
         binding.recyclerGroups.setAdapter(groupAdapter);
     }
 
-    // 从JSON文件加载联系人数据
+    /**
+     * 从JSON文件加载联系人数据
+     * @return 联系人列表
+     */
     private List<Contact> loadContacts() {
         try {
             Contact[] contacts = fileUtil.readFile("contacts.json", Contact[].class);
@@ -561,17 +605,23 @@ public class GroupFragment extends Fragment {
         }
     }
 
-    // 从JSON文件加载分组数据
+    /**
+     * 从JSON文件加载分组数据
+     * @return 分组列表
+     */
     private List<Group> loadGroups() {
         try {
             Group[] groups = fileUtil.readFile("groups.json", Group[].class);
             return Arrays.asList(groups);
         } catch (Exception e) {
-            Log.e("HomeFragment", "加载分组失败", e);
+            Log.e("GroupFragment", "加载分组失败", e);
             return new ArrayList<>();
         }
     }
 
+    /**
+     * 视图销毁时释放资源
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

@@ -25,21 +25,47 @@ import com.example.contacthub.utils.PhotoUtil;
 
 import java.util.List;
 
+/**
+ * 联系人列表适配器，用于显示联系人信息并支持搜索高亮
+ */
 public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
     private List<Contact> contacts;
     private OnContactClickListener listener;
-    private String searchKeyword = ""; // 新增搜索关键词
+    private String searchKeyword = "";
 
-    // 添加显示设置的常量
+    // 显示设置的常量
     private static final String PREFS_NAME = "ContactDisplayPrefs";
     private static final String KEY_SHOW_MOBILE = "show_mobile";
     private static final String KEY_SHOW_TELEPHONE = "show_telephone";
     private static final String KEY_SHOW_ADDRESS = "show_address";
 
+    /**
+     * 联系人点击监听器接口
+     */
     public interface OnContactClickListener {
+        /**
+         * 联系人被点击时的回调方法
+         * 
+         * @param contact 被点击的联系人对象
+         */
         void onContactClick(Contact contact);
     }
 
+    /**
+     * 设置联系人点击监听器
+     *
+     * @param listener 实现了OnContactClickListener接口的监听器
+     */
+    public void setOnContactClickListener(OnContactClickListener listener) {
+        this.listener = listener;
+    }
+
+    /**
+     * 绑定视图数据
+     *
+     * @param holder 视图持有者
+     * @param position 项目在列表中的位置
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Contact contact = contacts.get(position);
@@ -102,16 +128,13 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         // 设置联系人头像
         String photoBase64 = contact.getPhoto();
         if (photoBase64 != null && !photoBase64.isEmpty()) {
-            // 使用PhotoUtil将Base64字符串转换为Bitmap
             Bitmap avatarBitmap = PhotoUtil.base64ToBitmap(photoBase64);
             if (avatarBitmap != null) {
                 holder.profileImageView.setImageBitmap(avatarBitmap);
             } else {
-                // 解码失败，显示默认头像
                 holder.profileImageView.setImageResource(R.drawable.ic_person);
             }
         } else {
-            // 没有头像数据，显示默认头像
             holder.profileImageView.setImageResource(R.drawable.ic_person);
         }
 
@@ -121,7 +144,6 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
                 listener.onContactClick(contact);
             }
 
-            // 跳转到 ContactDetailActivity
             Intent intent = new Intent(context, ContactDetailActivity.class);
             intent.putExtra("contact", contact);
             context.startActivity(intent);
@@ -130,6 +152,7 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
 
     /**
      * 设置高亮文本
+     *
      * @param textView 要设置的TextView
      * @param text 原始文本
      * @param keyword 要高亮的关键词
@@ -161,12 +184,18 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         textView.setText(spannableString);
     }
 
+    /**
+     * 构造函数
+     *
+     * @param contacts 联系人列表
+     */
     public ContactAdapter(List<Contact> contacts) {
         this.contacts = contacts;
     }
     
     /**
-     * 设置搜索关键词
+     * 设置搜索关键词，用于高亮显示匹配内容
+     *
      * @param keyword 搜索关键词
      */
     public void setSearchKeyword(String keyword) {
@@ -174,6 +203,13 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         notifyDataSetChanged();
     }
 
+    /**
+     * 创建视图持有者
+     *
+     * @param parent 父视图组
+     * @param viewType 视图类型
+     * @return 新创建的ViewHolder
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -182,11 +218,19 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         return new ViewHolder(view);
     }
 
+    /**
+     * 获取项目数量
+     *
+     * @return 联系人列表的大小
+     */
     @Override
     public int getItemCount() {
         return contacts.size();
     }
 
+    /**
+     * 联系人视图持有者
+     */
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView nameTextView;
         TextView mobileTextView;
@@ -194,6 +238,11 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         TextView addressTextView;
         ImageView profileImageView;
 
+        /**
+         * 构造函数
+         *
+         * @param itemView 项目视图
+         */
         ViewHolder(View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.tv_contact_name);
