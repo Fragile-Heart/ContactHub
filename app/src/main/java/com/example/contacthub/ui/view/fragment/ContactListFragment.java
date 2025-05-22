@@ -146,16 +146,30 @@ public class ContactListFragment extends Fragment implements AlphabetIndexView.O
      */
     private void updateContactList(String key) {
         if (key.isEmpty()) {
+            // 显示所有联系人，按拼音分组
             binding.recyclerContactList.setLayoutManager(new LinearLayoutManager(requireContext()));
             binding.recyclerContactList.setAdapter(new ContactSortByPinyinAdapter(contactMapByPinyin));
             binding.alphabetIndex.setVisibility(View.VISIBLE);
         } else {
+            // 搜索联系人
             List<Contact> filteredContacts = ContactIndexer.search(allContacts, key);
-            binding.recyclerContactList.setLayoutManager(new LinearLayoutManager(requireContext()));
-            ContactAdapter adapter = new ContactAdapter(filteredContacts);
-            adapter.setSearchKeyword(key); // 设置搜索关键词以便高亮显示
-            binding.recyclerContactList.setAdapter(adapter);
-            binding.alphabetIndex.setVisibility(View.GONE);
+
+            if (filteredContacts.isEmpty()) {
+                // 无搜索结果时显示空列表
+                binding.recyclerContactList.setLayoutManager(new LinearLayoutManager(requireContext()));
+                ContactAdapter adapter = new ContactAdapter(filteredContacts);
+                adapter.setSearchKeyword(key);
+                binding.recyclerContactList.setAdapter(adapter);
+                binding.alphabetIndex.setVisibility(View.GONE);
+            } else {
+                // 有搜索结果时仍然按拼音分组显示
+                Map<String, List<Contact>> filteredMap = ContactIndexer.groupByFirstLetter(filteredContacts);
+                binding.recyclerContactList.setLayoutManager(new LinearLayoutManager(requireContext()));
+                ContactSortByPinyinAdapter adapter = new ContactSortByPinyinAdapter(filteredMap);
+                adapter.setSearchKeyword(key);
+                binding.recyclerContactList.setAdapter(adapter);
+                binding.alphabetIndex.setVisibility(View.VISIBLE);
+            }
         }
     }
 

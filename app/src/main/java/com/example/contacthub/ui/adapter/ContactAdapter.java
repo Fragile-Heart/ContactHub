@@ -80,55 +80,46 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         // 设置联系人姓名（带高亮）
         setHighlightedText(holder.nameTextView, contact.getName(), searchKeyword);
 
-        // 检查搜索关键词是否匹配手机号码
-        String mobileNumber = contact.getMobileNumber();
-        boolean mobileMatches = !TextUtils.isEmpty(searchKeyword) && 
-                               mobileNumber != null && 
-                               mobileNumber.toLowerCase().contains(searchKeyword.toLowerCase());
-        
-        // 根据设置显示手机号码（带高亮），或者在搜索匹配时显示
-        if ((showMobile || mobileMatches) && mobileNumber != null && !mobileNumber.isEmpty()) {
-            String mobileText = "手机: " + mobileNumber;
-            setHighlightedText(holder.mobileTextView, mobileText, searchKeyword);
+        // 检查是否有任何字段匹配
+        boolean mobileMatches = !TextUtils.isEmpty(searchKeyword) &&
+                              contact.getMobileNumber() != null &&
+                              contact.getMobileNumber().contains(searchKeyword);
+
+        boolean telephoneMatches = !TextUtils.isEmpty(searchKeyword) &&
+                                 contact.getTelephoneNumber() != null &&
+                                 contact.getTelephoneNumber().contains(searchKeyword);
+
+        boolean addressMatches = !TextUtils.isEmpty(searchKeyword) &&
+                               contact.getAddress() != null &&
+                               contact.getAddress().contains(searchKeyword);
+
+        // 显示手机号(高亮匹配部分)
+        if ((showMobile || mobileMatches) && !TextUtils.isEmpty(contact.getMobileNumber())) {
             holder.mobileTextView.setVisibility(View.VISIBLE);
+            setHighlightedText(holder.mobileTextView, "手机: " + contact.getMobileNumber(), searchKeyword);
         } else {
             holder.mobileTextView.setVisibility(View.GONE);
         }
 
-        // 检查搜索关键词是否匹配固定电话
-        String telephoneNumber = contact.getTelephoneNumber();
-        boolean telephoneMatches = !TextUtils.isEmpty(searchKeyword) && 
-                                  telephoneNumber != null && 
-                                  telephoneNumber.toLowerCase().contains(searchKeyword.toLowerCase());
-        
-        // 根据设置显示固定电话（带高亮），或者在搜索匹配时显示
-        if ((showTelephone || telephoneMatches) && telephoneNumber != null && !telephoneNumber.isEmpty()) {
-            String telephoneText = "电话: " + telephoneNumber;
-            setHighlightedText(holder.telephoneTextView, telephoneText, searchKeyword);
+        // 显示电话号(高亮匹配部分)
+        if ((showTelephone || telephoneMatches) && !TextUtils.isEmpty(contact.getTelephoneNumber())) {
             holder.telephoneTextView.setVisibility(View.VISIBLE);
+            setHighlightedText(holder.telephoneTextView, "电话: " + contact.getTelephoneNumber(), searchKeyword);
         } else {
             holder.telephoneTextView.setVisibility(View.GONE);
         }
 
-        // 检查搜索关键词是否匹配地址
-        String address = contact.getAddress();
-        boolean addressMatches = !TextUtils.isEmpty(searchKeyword) && 
-                                address != null && 
-                                address.toLowerCase().contains(searchKeyword.toLowerCase());
-        
-        // 根据设置显示地址（带高亮），或者在搜索匹配时显示
-        if ((showAddress || addressMatches) && address != null && !address.isEmpty()) {
-            String addressText = "地址: " + address;
-            setHighlightedText(holder.addressTextView, addressText, searchKeyword);
+        // 显示地址(高亮匹配部分)
+        if ((showAddress || addressMatches) && !TextUtils.isEmpty(contact.getAddress())) {
             holder.addressTextView.setVisibility(View.VISIBLE);
+            setHighlightedText(holder.addressTextView, "地址: " + contact.getAddress(), searchKeyword);
         } else {
             holder.addressTextView.setVisibility(View.GONE);
         }
 
         // 设置联系人头像
-        String photoBase64 = contact.getPhoto();
-        if (photoBase64 != null && !photoBase64.isEmpty()) {
-            Bitmap avatarBitmap = PhotoUtil.base64ToBitmap(photoBase64);
+        if (!TextUtils.isEmpty(contact.getPhoto())) {
+            Bitmap avatarBitmap = PhotoUtil.base64ToBitmap(contact.getPhoto());
             if (avatarBitmap != null) {
                 holder.profileImageView.setImageBitmap(avatarBitmap);
             } else {
@@ -138,7 +129,7 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
             holder.profileImageView.setImageResource(R.drawable.ic_person);
         }
 
-        // 设置点击事件
+        // 设置点击事件处理
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onContactClick(contact);

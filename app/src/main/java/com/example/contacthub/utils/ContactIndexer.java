@@ -17,51 +17,33 @@ import java.util.TreeMap;
 public class ContactIndexer {
 
     /**
-     * 确保所有联系人已生成拼音
-     * 
-     * @param contacts 需要处理的联系人列表
-     * @return 处理后的联系人列表（所有联系人均已生成拼音）
-     */
-    public static List<Contact> ensurePinyin(List<Contact> contacts) {
-        for (Contact contact : contacts) {
-            if (contact.getPinyin() == null || contact.getPinyin().isEmpty()) {
-                contact.generatePinyin();
-            }
-        }
-        return contacts;
-    }
-
-    /**
-     * 按拼音对联系人列表进行排序
-     * 
-     * @param contacts 需要排序的联系人列表
-     * @return 按拼音排序后的联系人列表
-     */
-    public static List<Contact> sortByPinyin(List<Contact> contacts) {
-        List<Contact> sortedList = new ArrayList<>(contacts);
-        sortedList.sort(Comparator.comparing(Contact::getPinyin));
-        return sortedList;
-    }
-
-    /**
-     * 获取按首字母分组的联系人
+     * 按拼音首字母对联系人进行分组
      * 
      * @param contacts 需要分组的联系人列表
      * @return 按首字母分组的联系人映射表
      */
     public static Map<String, List<Contact>> groupByFirstLetter(List<Contact> contacts) {
-        List<Contact> sortedContacts = sortByPinyin(ensurePinyin(contacts));
-        Map<String, List<Contact>> letterGroups = new TreeMap<>();
+        Map<String, List<Contact>> map = new TreeMap<>();
 
-        for (Contact contact : sortedContacts) {
-            String letter = contact.getFirstLetter().substring(0, 1);
-            if (!letterGroups.containsKey(letter)) {
-                letterGroups.put(letter, new ArrayList<>());
+        for (Contact contact : contacts) {
+            // 检查firstLetter是否为空
+            if (contact.getFirstLetter() == null || contact.getFirstLetter().isEmpty()) {
+                contact.generatePinyin(); // 重新生成拼音信息
             }
-            Objects.requireNonNull(letterGroups.get(letter)).add(contact);
+
+            // 获取首字母，若仍为空则归类到"#"
+            String firstLetter = "#";
+            if (contact.getFirstLetter() != null && !contact.getFirstLetter().isEmpty()) {
+                firstLetter = contact.getFirstLetter().substring(0, 1);
+            }
+
+            if (!map.containsKey(firstLetter)) {
+                map.put(firstLetter, new ArrayList<>());
+            }
+            map.get(firstLetter).add(contact);
         }
 
-        return letterGroups;
+        return map;
     }
 
     /**
@@ -73,39 +55,60 @@ public class ContactIndexer {
      * @return 匹配的联系人列表
      */
     public static List<Contact> search(List<Contact> contacts, String keyword) {
-        List<Contact> result = new ArrayList<>();
         if (keyword == null || keyword.isEmpty()) {
-            return contacts;
+            return new ArrayList<>(contacts);
         }
-        
+
         String lowerKeyword = keyword.toLowerCase();
-        
+        List<Contact> result = new ArrayList<>();
+
+        // 检查是否为拼音声母搜索(全是字母且长度大于1)
+        boolean isPinyinInitials = lowerKeyword.matches("[a-z]+") && lowerKeyword.length() > 1;
+
+        // 检查是否为数字搜索（匹配电话号码）
+        boolean isNumberSearch = lowerKeyword.matches("[0-9]+");
+
         for (Contact contact : contacts) {
-            // 匹配名字
-            if (contact.getName() != null && contact.getName().toLowerCase().contains(lowerKeyword)) {
+            // 姓名匹配
+            if (contact.getName() != null &&
+                contact.getName().toLowerCase().contains(lowerKeyword)) {
                 result.add(contact);
                 continue;
             }
-            
-            // 匹配拼音
-            if (contact.getPinyin() != null && contact.getPinyin().toLowerCase().contains(lowerKeyword)) {
+
+            // 手机号匹配
+            if (contact.getMobileNumber() != null &&
+                contact.getMobileNumber().contains(lowerKeyword)) {
                 result.add(contact);
                 continue;
             }
-            
-            // 匹配手机号码
-            if (contact.getMobileNumber() != null && contact.getMobileNumber().contains(keyword)) {
+
+            // 电话号匹配
+            if (contact.getTelephoneNumber() != null &&
+                contact.getTelephoneNumber().contains(lowerKeyword)) {
                 result.add(contact);
                 continue;
             }
-            
-            // 匹配电话号码
-            if (contact.getTelephoneNumber() != null && contact.getTelephoneNumber().contains(keyword)) {
+
+            // 拼音全拼匹配
+            if (contact.getPinyin() != null &&
+                contact.getPinyin().toLowerCase().contains(lowerKeyword)) {
                 result.add(contact);
                 continue;
+            }
+
+            // 拼音声母匹配（特殊处理拼音首字母搜索）
+            if (isPinyinInitials && contact.getFirstLetter() != null) {
+                String initials = contact.getFirstLetter().toLowerCase();
+                if (initials.contains(lowerKeyword)) {
+                    result.add(contact);
+                }
             }
         }
-        
+
+        // 按姓名排序
+        result.sort(Comparator.comparing(Contact::getName));
+
         return result;
     }
 }
