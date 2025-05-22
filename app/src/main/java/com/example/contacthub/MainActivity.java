@@ -196,6 +196,18 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             Log.e("MainActivity", "初始化分组数据失败", e);
         }
+
+        // 添加我的名片
+        String myCardJson = "{\"name\":\"我的名片\",\"mobileNumber\":\"您的手机号\",\"telephoneNumber\":\"您的电话号码\",\"email\":\"your.email@example.com\",\"address\":\"您的地址\",\"photo\":\"\",\"qq\":\"您的QQ号\",\"wechat\":\"您的微信号\",\"website\":\"https://your-website.com\",\"birthday\":\"2000-01-01\",\"company\":\"您的单位\",\"postalCode\":\"100000\",\"notes\":\"这是我的个人名片\"}";
+        try {
+            FileOutputStream fosMyCard = openFileOutput("my.json", Context.MODE_PRIVATE);
+            fosMyCard.write(myCardJson.getBytes());
+            fosMyCard.close();
+            Log.d("MainActivity", "我的名片数据初始化成功");
+        } catch (IOException e) {
+            Log.e("MainActivity", "初始化我的名片数据失败", e);
+        }
+
     }
 
     /**

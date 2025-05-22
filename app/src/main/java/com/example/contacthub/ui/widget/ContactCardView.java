@@ -42,34 +42,41 @@ import java.util.Locale;
 public class ContactCardView extends FrameLayout {
 
     private static final String TAG = "ContactCardView";
-        private static final int EDIT_CONTACT_REQUEST_CODE = 100;
+    private static final int EDIT_CONTACT_REQUEST_CODE = 100;
 
-        private TextView tvName;
-        private TextView tvMobileNumber;
-        private TextView tvTelephoneNumber;
-        private TextView tvEmail;
-        private TextView tvAddress;
-        private TextView tvQQ;
-        private TextView tvWechat;
-        private TextView tvWebsite;
-        private TextView tvBirthday;
-        private TextView tvCompany;
-        private TextView tvPostalCode;
-        private TextView tvNotes;
+    private TextView tvName;
+    private TextView tvMobileNumber;
+    private TextView tvTelephoneNumber;
+    private TextView tvEmail;
+    private TextView tvAddress;
+    private TextView tvQQ;
+    private TextView tvWechat;
+    private TextView tvWebsite;
+    private TextView tvBirthday;
+    private TextView tvCompany;
+    private TextView tvPostalCode;
+    private TextView tvNotes;
 
-        private View layoutMobileNumber;
-        private View layoutTelephoneNumber;
-        private View layoutEmail;
-        private View layoutAddress;
-        private View layoutQQ;
-        private View layoutWechat;
-        private View layoutWebsite;
-        private View layoutBirthday;
-        private View layoutCompany;
-        private View layoutPostalCode;
-        private View layoutNotes;
+    private View layoutMobileNumber;
+    private View layoutTelephoneNumber;
+    private View layoutEmail;
+    private View layoutAddress;
+    private View layoutQQ;
+    private View layoutWechat;
+    private View layoutWebsite;
+    private View layoutBirthday;
+    private View layoutCompany;
+    private View layoutPostalCode;
+    private View layoutNotes;
 
-        private ShapeableImageView contactAvatar;
+    private ShapeableImageView contactAvatar;
+
+    private boolean isMyCard = false;
+
+    // 添加设置方法
+    public void setMyCard(boolean isMyCard) {
+        this.isMyCard = isMyCard;
+    }
 
     private QRCodeUtil qrCodeUtil;  // QRCodeUtils实例
 
@@ -327,6 +334,8 @@ public class ContactCardView extends FrameLayout {
                 Intent intent = new Intent(getContext(), ContactEditActivity.class);
                 // 将当前联系人对象传递给编辑页面
                 intent.putExtra("contact", currentContact);
+                // 添加标记表示这是否为"我的名片"
+                intent.putExtra("isMyCard", isMyCard);
 
                 // 如果上下文是Activity，使用startActivityForResult
                 if (context instanceof Activity) {
@@ -337,8 +346,7 @@ public class ContactCardView extends FrameLayout {
                     Log.w(TAG, "编辑联系人：当前上下文不是Activity，无法接收编辑结果");
                 }
             } else {
-                android.widget.Toast.makeText(getContext(), "没有联系人可编辑",
-                        android.widget.Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "没有联系人可编辑", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -398,12 +406,12 @@ public class ContactCardView extends FrameLayout {
             if (updatedContact != null) {
                 // 更新当前显示的联系人
                 setContact(updatedContact);
-                
+
                 // 通知监听器联系人已更新
                 if (contactUpdatedListener != null) {
                     contactUpdatedListener.onContactUpdated(updatedContact);
                 }
-                
+
                 Log.d(TAG, "联系人已更新: " + updatedContact.getName());
             }
         }
@@ -416,7 +424,7 @@ public class ContactCardView extends FrameLayout {
         try {
             // 使用QRCodeUtils实例生成联系人二维码
             Bitmap qrCodeBitmap = qrCodeUtil.generateContactQRCode(currentContact, 600);
-            
+
             if (qrCodeBitmap != null) {
                 // 显示包含二维码的对话框
                 showQRCodeDialog(qrCodeBitmap);
@@ -424,7 +432,7 @@ public class ContactCardView extends FrameLayout {
                 Toast.makeText(getContext(), "生成二维码失败", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Toast.makeText(getContext(), "生成联系人信息失败: " + e.getMessage(), 
+            Toast.makeText(getContext(), "生成联系人信息失败: " + e.getMessage(),
                     Toast.LENGTH_SHORT).show();
             Log.e(TAG, "生成联系人二维码失败", e);
         }
@@ -437,30 +445,30 @@ public class ContactCardView extends FrameLayout {
     private void showQRCodeDialog(Bitmap qrCodeBitmap) {
         // 创建对话框布局
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_qr_code, null);
-        
+
         // 设置二维码图片
         ImageView imgQrCode = dialogView.findViewById(R.id.img_qr_code);
         imgQrCode.setImageBitmap(qrCodeBitmap);
-        
+
         // 设置标题
         TextView tvDialogTitle = dialogView.findViewById(R.id.tv_dialog_title);
         tvDialogTitle.setText("扫描二维码添加 " + currentContact.getName() + " 的联系信息");
-        
+
         // 创建对话框
         AlertDialog dialog = new AlertDialog.Builder(getContext())
                 .setView(dialogView)
                 .create();
-        
+
         // 设置保存按钮点击事件
         dialogView.findViewById(R.id.btn_save_qr_code).setOnClickListener(v -> {
             saveQRCodeToGallery(qrCodeBitmap);
         });
-        
+
         // 设置关闭按钮点击事件
         dialogView.findViewById(R.id.btn_close).setOnClickListener(v -> {
             dialog.dismiss();
         });
-        
+
         // 显示对话框
         dialog.show();
     }
@@ -470,9 +478,9 @@ public class ContactCardView extends FrameLayout {
      * @param bitmap 要保存的二维码位图
      */
     private void saveQRCodeToGallery(Bitmap bitmap) {
-        String fileName = "联系人_" + currentContact.getName() + "_" 
+        String fileName = "联系人_" + currentContact.getName() + "_"
                 + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".png";
-        
+
         // 根据Android版本使用不同的保存方法
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             saveImageWithMediaStore(bitmap, fileName);
@@ -489,7 +497,7 @@ public class ContactCardView extends FrameLayout {
         values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
         values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ContactHub");
-        
+
         Uri uri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
         if (uri != null) {
             try (OutputStream out = getContext().getContentResolver().openOutputStream(uri)) {
@@ -511,22 +519,22 @@ public class ContactCardView extends FrameLayout {
         try {
             File directory = new File(Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_PICTURES), "ContactHub");
-            
+
             if (!directory.exists()) {
                 directory.mkdirs();
             }
-            
+
             File file = new File(directory, fileName);
             FileOutputStream out = new FileOutputStream(file);
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
             out.close();
-            
+
             // 通知媒体扫描器扫描新图片
             Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
             mediaScanIntent.setData(Uri.fromFile(file));
             getContext().sendBroadcast(mediaScanIntent);
-            
+
             Toast.makeText(getContext(), "二维码已保存到相册", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             Toast.makeText(getContext(), "保存失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();

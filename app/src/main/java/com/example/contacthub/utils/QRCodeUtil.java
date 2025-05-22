@@ -52,45 +52,55 @@ public class QRCodeUtil {
      */
     public String contactToJson(Contact contact) throws JSONException {
         JSONObject contactJson = new JSONObject();
-        contactJson.put("name", contact.getName() != null ? contact.getName() : "");
-        contactJson.put("mobileNumber", contact.getMobileNumber() != null ? contact.getMobileNumber() : "");
-        contactJson.put("telephoneNumber", contact.getTelephoneNumber() != null ? contact.getTelephoneNumber() : "");
-        contactJson.put("email", contact.getEmail() != null ? contact.getEmail() : "");
-        contactJson.put("address", contact.getAddress() != null ? contact.getAddress() : "");
-        contactJson.put("photo", contact.getPhoto() != null ? contact.getPhoto() : "");
-        contactJson.put("qq", contact.getQq() != null ? contact.getQq() : "");
-        contactJson.put("wechat", contact.getWechat() != null ? contact.getWechat() : "");
-        contactJson.put("website", contact.getWebsite() != null ? contact.getWebsite() : "");
-        contactJson.put("birthday", contact.getBirthday() != null ? contact.getBirthday() : "");
-        contactJson.put("company", contact.getCompany() != null ? contact.getCompany() : "");
-        contactJson.put("postalCode", contact.getPostalCode() != null ? contact.getPostalCode() : "");
-        contactJson.put("notes", contact.getNotes() != null ? contact.getNotes() : "");
-        
-        return contactJson.toString();
+        try {
+            contactJson.put("name", contact.getName() != null ? contact.getName() : "");
+            contactJson.put("mobileNumber", contact.getMobileNumber() != null ? contact.getMobileNumber() : "");
+            contactJson.put("telephoneNumber", contact.getTelephoneNumber() != null ? contact.getTelephoneNumber() : "");
+            contactJson.put("email", contact.getEmail() != null ? contact.getEmail() : "");
+            contactJson.put("address", contact.getAddress() != null ? contact.getAddress() : "");
+            contactJson.put("qq", contact.getQq() != null ? contact.getQq() : "");
+            contactJson.put("wechat", contact.getWechat() != null ? contact.getWechat() : "");
+            contactJson.put("website", contact.getWebsite() != null ? contact.getWebsite() : "");
+            contactJson.put("birthday", contact.getBirthday() != null ? contact.getBirthday() : "");
+            contactJson.put("company", contact.getCompany() != null ? contact.getCompany() : "");
+            contactJson.put("postalCode", contact.getPostalCode() != null ? contact.getPostalCode() : "");
+            contactJson.put("notes", contact.getNotes() != null ? contact.getNotes() : "");
+            
+            String jsonString = contactJson.toString();
+            Log.d(TAG, "生成的联系人JSON数据长度: " + jsonString.length());
+            return jsonString;
+        } catch (JSONException e) {
+            Log.e(TAG, "创建联系人JSON时出错: " + e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
-     *
+     * 从JSON字符串转换为联系人对象
      */
     public Contact jsonToContact(String jsonStr) throws JSONException {
-        JSONObject jsonObject = new JSONObject(jsonStr);
-        Contact contact = new Contact();
-        contact.setName(jsonObject.optString("name", ""));
-        contact.setMobileNumber(jsonObject.optString("mobileNumber", ""));
-        contact.setTelephoneNumber(jsonObject.optString("telephoneNumber", ""));
-        contact.setEmail(jsonObject.optString("email", ""));
-        contact.setAddress(jsonObject.optString("address", ""));
-        contact.setPhoto(jsonObject.optString("photo", ""));
-        contact.setQq(jsonObject.optString("qq", ""));
-        contact.setWechat(jsonObject.optString("wechat", ""));
-        contact.setWebsite(jsonObject.optString("website", ""));
-        contact.setBirthday(jsonObject.optString("birthday", ""));
-        contact.setCompany(jsonObject.optString("company", ""));
-        contact.setPostalCode(jsonObject.optString("postalCode", ""));
-        contact.setNotes(jsonObject.optString("notes", ""));
-        
-        contact.setGroupIds(new ArrayList<>());
-        return contact;
+        Log.d(TAG, "解析联系人JSON数据长度: " + jsonStr.length());
+        try {
+            JSONObject jsonObject = new JSONObject(jsonStr);
+            Contact contact = new Contact();
+            contact.setName(jsonObject.optString("name", ""));
+            contact.setMobileNumber(jsonObject.optString("mobileNumber", ""));
+            contact.setTelephoneNumber(jsonObject.optString("telephoneNumber", ""));
+            contact.setEmail(jsonObject.optString("email", ""));
+            contact.setAddress(jsonObject.optString("address", ""));
+            contact.setQq(jsonObject.optString("qq", ""));
+            contact.setWechat(jsonObject.optString("wechat", ""));
+            contact.setWebsite(jsonObject.optString("website", ""));
+            contact.setBirthday(jsonObject.optString("birthday", ""));
+            contact.setCompany(jsonObject.optString("company", ""));
+            contact.setPostalCode(jsonObject.optString("postalCode", ""));
+            contact.setNotes(jsonObject.optString("notes", ""));
+            contact.setGroupIds(new ArrayList<>());
+            return contact;
+        } catch (JSONException e) {
+            Log.e(TAG, "解析联系人JSON时出错: " + e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -102,19 +112,27 @@ public class QRCodeUtil {
     public Bitmap generateQRCode(String content, int size) {
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
-            // 不需要重新编码，直接使用原始内容
-            // 移除不必要的编码转换，避免可能的字符编码问题
-            
             // 创建编码提示，确保使用UTF-8
             Map<com.google.zxing.EncodeHintType, Object> hints = new EnumMap<>(com.google.zxing.EncodeHintType.class);
             hints.put(com.google.zxing.EncodeHintType.CHARACTER_SET, StandardCharsets.UTF_8.name());
-            hints.put(com.google.zxing.EncodeHintType.MARGIN, 1);
+            hints.put(com.google.zxing.EncodeHintType.MARGIN, 1); // 最小边距以最大化内容
+            hints.put(com.google.zxing.EncodeHintType.ERROR_CORRECTION, com.google.zxing.qrcode.decoder.ErrorCorrectionLevel.H); // 最高错误校正
             
-            BitMatrix bitMatrix = multiFormatWriter.encode(content, BarcodeFormat.QR_CODE, size, size, hints);
+            // 对于较大的数据，可能需要更大的尺寸
+            int adjustedSize = size;
+            if (content.length() > 1000) {
+                // 如果内容很长，增加QR码大小以确保可读性
+                adjustedSize = Math.max(size, 800);
+                Log.d(TAG, "内容较大，调整QR码尺寸: " + adjustedSize);
+            }
+            
+            BitMatrix bitMatrix = multiFormatWriter.encode(content, BarcodeFormat.QR_CODE, adjustedSize, adjustedSize, hints);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            return barcodeEncoder.createBitmap(bitMatrix);
+            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
+            Log.d(TAG, "成功生成QR码，内容长度: " + content.length() + ", 尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
+            return bitmap;
         } catch (WriterException e) {
-            Log.e(TAG, "生成二维码失败", e);
+            Log.e(TAG, "生成二维码失败: " + e.getMessage(), e);
             return null;
         }
     }
@@ -125,10 +143,11 @@ public class QRCodeUtil {
     public Bitmap generateContactQRCode(Contact contact, int size) {
         try {
             String jsonContent = contactToJson(contact);
-            Log.d(TAG, "生成QR的JSON内容: " + jsonContent); // 记录生成的JSON内容，便于调试
+            Log.d(TAG, "生成QR的JSON内容长度: " + jsonContent.length()); // 记录生成的JSON内容长度
+
             return generateQRCode(jsonContent, size);
         } catch (JSONException e) {
-            Log.e(TAG, "生成联系人JSON信息失败", e);
+            Log.e(TAG, "生成联系人JSON信息失败: " + e.getMessage(), e);
             return null;
         }
     }
@@ -153,10 +172,10 @@ public class QRCodeUtil {
         try {
             Result result = new MultiFormatReader().decode(binaryBitmap, hints);
             String resultText = result.getText();
-            Log.d(TAG, "解码QR内容: " + resultText); // 记录解码结果，便于调试
+            Log.d(TAG, "解码QR内容长度: " + (resultText != null ? resultText.length() : 0)); // 记录解码结果长度
             return resultText;
         } catch (NotFoundException e) {
-            Log.e(TAG, "二维码解析失败", e);
+            Log.e(TAG, "二维码解析失败: " + e.getMessage(), e);
             return null;
         }
     }

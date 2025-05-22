@@ -29,6 +29,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -177,16 +178,25 @@ public class ContactEditActivity extends AppCompatActivity {
             etTelephone.setText(contact.getTelephoneNumber());
             etEmail.setText(contact.getEmail());
             etAddress.setText(contact.getAddress());
-            etQQ = findViewById(R.id.et_qq);
-            etWechat = findViewById(R.id.et_wechat);
-            etWebsite = findViewById(R.id.et_website);
-            etBirthday = findViewById(R.id.et_birthday);
-            etCompany = findViewById(R.id.et_company);
-            etPostalCode = findViewById(R.id.et_postal_code);
-            etNotes = findViewById(R.id.et_notes);
 
-            // 创建分组选择UI
-            createGroupCheckboxes();
+            // 设置扩展字段的值
+            etQQ.setText(contact.getQq());
+            etWechat.setText(contact.getWechat());
+            etWebsite.setText(contact.getWebsite());
+            etBirthday.setText(contact.getBirthday());
+            etCompany.setText(contact.getCompany());
+            etPostalCode.setText(contact.getPostalCode());
+            etNotes.setText(contact.getNotes());
+
+            // 判断是否为我的名片，如果是则隐藏分组选择
+            boolean isMyCard = getIntent().getBooleanExtra("isMyCard", false);
+            if (isMyCard) {
+                // 如果是我的名片，隐藏分组卡片
+                groupsCard.setVisibility(View.GONE);
+            } else {
+                // 创建分组选择UI
+                createGroupCheckboxes();
+            }
 
             // 如果联系人有头像数据，则显示
             if (contact.getPhoto() != null && !contact.getPhoto().isEmpty()) {
@@ -264,40 +274,54 @@ public class ContactEditActivity extends AppCompatActivity {
         contact.setPostalCode(etPostalCode.getText().toString().trim());
         contact.setNotes(etNotes.getText().toString().trim());
 
-        // 更新联系人分组
-        updateContactGroups();
+
+        boolean isMyCard = getIntent().getBooleanExtra("isMyCard", false);
+
+
 
         // 保存联系人到文件
         try {
-            // 读取现有联系人列表
-            Contact[] contacts = fileUtil.readFile("contacts.json", Contact[].class);
-            List<Contact> contactList = new ArrayList<>(Arrays.asList(contacts));
+            if (isMyCard) {
+                // 保存到my.json
+                contact.setId(null); // 移除ID字段
+                String json = new Gson().toJson(contact);
+                FileOutputStream fos = openFileOutput("my.json", MODE_PRIVATE);
+                fos.write(json.getBytes());
+                fos.close();
+                Log.d(TAG, "我的名片已更新");
+            } else {
+                updateContactGroups();
 
-            // 查找并更新联系人
-            boolean found = false;
-            for (int i = 0; i < contactList.size(); i++) {
-                if (contactList.get(i).getId().equals(contact.getId())) {
-                    contactList.set(i, contact);
-                    found = true;
-                    break;
+                // 读取现有联系人列表
+                Contact[] contacts = fileUtil.readFile("contacts.json", Contact[].class);
+                List<Contact> contactList = new ArrayList<>(Arrays.asList(contacts));
+
+                // 查找并更新联系人
+                boolean found = false;
+                for (int i = 0; i < contactList.size(); i++) {
+                    if (contactList.get(i).getId().equals(contact.getId())) {
+                        contactList.set(i, contact);
+                        found = true;
+                        break;
+                    }
                 }
+
+                // 如果没找到，说明是新联系人，添加到列表
+                if (!found) {
+                    contactList.add(contact);
+                }
+
+                // 将更新后的列表转换为数组并保存
+                Contact[] updatedContacts = contactList.toArray(new Contact[0]);
+                String json = new Gson().toJson(updatedContacts);
+
+                // 保存到文件
+                java.io.FileOutputStream fos = openFileOutput("contacts.json", MODE_PRIVATE);
+                fos.write(json.getBytes());
+                fos.close();
+
+                Log.d(TAG, "联系人保存成功");
             }
-
-            // 如果没找到，说明是新联系人，添加到列表
-            if (!found) {
-                contactList.add(contact);
-            }
-
-            // 将更新后的列表转换为数组并保存
-            Contact[] updatedContacts = contactList.toArray(new Contact[0]);
-            String json = new Gson().toJson(updatedContacts);
-
-            // 保存到文件
-            java.io.FileOutputStream fos = openFileOutput("contacts.json", MODE_PRIVATE);
-            fos.write(json.getBytes());
-            fos.close();
-
-            Log.d(TAG, "联系人保存成功");
         } catch (Exception e) {
             Log.e(TAG, "保存联系人失败", e);
             Toast.makeText(this, "保存失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();

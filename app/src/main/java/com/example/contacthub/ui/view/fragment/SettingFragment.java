@@ -3,6 +3,7 @@ package com.example.contacthub.ui.view.fragment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,7 +26,6 @@ import com.example.contacthub.utils.FileUtil;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,14 +36,18 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class SettingFragment extends Fragment {
     private FragmentSettingBinding binding;
     private static final String TAG = "SettingFragment";
     private String fileContent;
     private ActivityResultLauncher<Intent> saveFileLauncher;
-
     private ActivityResultLauncher<String[]> openFileLauncher;
+
+    // 添加显示设置的常量
+    private static final String PREFS_NAME = "ContactDisplayPrefs";
+    private static final String KEY_SHOW_MOBILE = "show_mobile";
+    private static final String KEY_SHOW_TELEPHONE = "show_telephone";
+    private static final String KEY_SHOW_ADDRESS = "show_address";
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -104,6 +108,9 @@ public class SettingFragment extends Fragment {
                 showToast("切换到白天模式");
             }
         });
+
+        // 添加联系人显示设置点击事件
+        binding.buttonContactDisplaySettings.setOnClickListener(v -> showContactDisplaySettings());
 
         binding.buttonOtherSettings.setOnClickListener(v ->
             showToast("其他设置功能待实现")
@@ -320,5 +327,35 @@ public class SettingFragment extends Fragment {
             Log.e(TAG, "保存导入的联系人失败", e);
             showToast("保存联系人失败: " + e.getMessage());
         }
+    }
+
+    // 显示联系人显示设置对话框
+    private void showContactDisplaySettings() {
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean showMobile = prefs.getBoolean(KEY_SHOW_MOBILE, true);
+        boolean showTelephone = prefs.getBoolean(KEY_SHOW_TELEPHONE, true);
+        boolean showAddress = prefs.getBoolean(KEY_SHOW_ADDRESS, true);
+
+        String[] options = {"显示手机号码", "显示固定电话", "显示地址"};
+        boolean[] checkedItems = {showMobile, showTelephone, showAddress};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("联系人显示设置")
+               .setMultiChoiceItems(options, checkedItems, (dialog, which, isChecked) -> {
+                   checkedItems[which] = isChecked;
+               })
+               .setPositiveButton("确定", (dialog, id) -> {
+                   // 保存设置
+                   SharedPreferences.Editor editor = prefs.edit();
+                   editor.putBoolean(KEY_SHOW_MOBILE, checkedItems[0]);
+                   editor.putBoolean(KEY_SHOW_TELEPHONE, checkedItems[1]);
+                   editor.putBoolean(KEY_SHOW_ADDRESS, checkedItems[2]);
+                   editor.apply();
+
+                   showToast("显示设置已保存");
+               })
+               .setNegativeButton("取消", (dialog, id) -> dialog.dismiss());
+
+        builder.create().show();
     }
 }
