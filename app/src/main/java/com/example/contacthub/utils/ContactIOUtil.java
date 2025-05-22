@@ -5,15 +5,36 @@ import com.example.contacthub.model.Contact;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.ByteArrayOutputStream;
+import ezvcard.Ezvcard;
+import ezvcard.VCard;
+import ezvcard.VCardVersion;
+import ezvcard.parameter.AddressType;
+import ezvcard.parameter.EmailType;
+import ezvcard.parameter.TelephoneType;
+import ezvcard.property.Address;
+import ezvcard.property.Birthday;
+import ezvcard.property.Email;
+import ezvcard.property.FormattedName;
+import ezvcard.property.Note;
+import ezvcard.property.Organization;
+import ezvcard.property.Photo;
+import ezvcard.property.RawProperty;
+import ezvcard.property.StructuredName;
+import ezvcard.property.Telephone;
+import ezvcard.property.Url;
+
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Base64;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 public class ContactIOUtil {
     private static final String TAG = "ContactIOUtil";
@@ -64,122 +85,163 @@ public class ContactIOUtil {
     }
 
     /**
-     * 将联系人转换为标准vCard 3.0格式
+     * 将联系人转换为标准vCard 3.0格式，使用EZ-VCard库
      */
     public static String convertContactsToVCard(String contactsJson) {
-        StringBuilder vcardBuilder = new StringBuilder();
         Gson gson = new Gson();
         Type contactListType = new TypeToken<List<Contact>>(){}.getType();
         List<Contact> contacts = gson.fromJson(contactsJson, contactListType);
-
+        
+        List<VCard> vcards = new ArrayList<>();
+        
         for (Contact contact : contacts) {
-            vcardBuilder.append("BEGIN:VCARD\r\n");
-            vcardBuilder.append("VERSION:3.0\r\n");
-
-            // 使用标准字段格式
-            if (contact.getName() != null && !contact.getName().isEmpty() && !contact.getName().equals("无")) {
-                vcardBuilder.append("FN:").append(escapeVCardValue(contact.getName())).append("\r\n");
-
-                // 添加结构化名称，常用于导入兼容性
-                String familyName = "";
-                String givenName = contact.getName();
-
+            VCard vcard = new VCard();
+            
+            // 设置vCard版本
+            vcard.setVersion(VCardVersion.V3_0);
+            
+            // 设置姓名
+            if (!isEmpty(contact.getName())) {
+                vcard.setFormattedName(new FormattedName(contact.getName()));
+                
+                // 添加结构化名称
+                StructuredName structuredName = new StructuredName();
                 // 简单中文名分割：假设第一个字是姓，其余是名
                 if (isChinese(contact.getName()) && contact.getName().length() > 1) {
-                    familyName = contact.getName().substring(0, 1);
-                    givenName = contact.getName().substring(1);
+                    String familyName = contact.getName().substring(0, 1);
+                    String givenName = contact.getName().substring(1);
+                    structuredName.setFamily(familyName);
+                    structuredName.setGiven(givenName);
+                } else {
+                    // 非中文名称，假设整个是名
+                    structuredName.setGiven(contact.getName());
                 }
-
-                vcardBuilder.append("N:").append(escapeVCardValue(familyName)).append(";")
-                           .append(escapeVCardValue(givenName)).append(";;;\r\n");
+                vcard.setStructuredName(structuredName);
             }
-
-            // 手机号 - 使用标准TYPE参数
+            
+            // 设置手机号
             if (!isEmpty(contact.getMobileNumber())) {
-                vcardBuilder.append("TEL;TYPE=CELL:").append(escapeVCardValue(contact.getMobileNumber())).append("\r\n");
+                Telephone tel = new Telephone(contact.getMobileNumber());
+                tel.getTypes().add(TelephoneType.CELL);
+                vcard.addTelephoneNumber(tel);
             }
-
-            // 固定电话
+            
+            // 设置固定电话
             if (!isEmpty(contact.getTelephoneNumber())) {
-                vcardBuilder.append("TEL;TYPE=HOME:").append(escapeVCardValue(contact.getTelephoneNumber())).append("\r\n");
+                Telephone tel = new Telephone(contact.getTelephoneNumber());
+                tel.getTypes().add(TelephoneType.HOME);
+                vcard.addTelephoneNumber(tel);
             }
-
-            // 邮箱
+            
+            // 设置邮箱
             if (!isEmpty(contact.getEmail())) {
-                vcardBuilder.append("EMAIL;TYPE=HOME:").append(escapeVCardValue(contact.getEmail())).append("\r\n");
+                Email email = new Email(contact.getEmail());
+                email.getTypes().add(EmailType.HOME);
+                vcard.addEmail(email);
             }
-
-            // 地址 - 使用标准格式
+            
+            // 设置地址
             if (!isEmpty(contact.getAddress())) {
-                vcardBuilder.append("ADR;TYPE=HOME:;;").append(escapeVCardValue(contact.getAddress())).append(";;;;\r\n");
+                Address address = new Address();
+                address.setStreetAddress(contact.getAddress());
+                address.getTypes().add(AddressType.HOME);
+                vcard.addAddress(address);
             }
-
-            // 标准和扩展字段
+            
+            // 设置公司
             if (!isEmpty(contact.getCompany())) {
-                vcardBuilder.append("ORG:").append(escapeVCardValue(contact.getCompany())).append("\r\n");
+                Organization org = new Organization();
+                org.getValues().add(contact.getCompany());
+                vcard.setOrganization(org);
             }
-
+            
+            // 设置网站
             if (!isEmpty(contact.getWebsite())) {
-                vcardBuilder.append("URL:").append(escapeVCardValue(contact.getWebsite())).append("\r\n");
+                vcard.addUrl(new Url(contact.getWebsite()));
             }
-
+            
+            // 设置生日
             if (!isEmpty(contact.getBirthday())) {
-                // 标准格式: YYYY-MM-DD
-                vcardBuilder.append("BDAY:").append(formatBirthday(contact.getBirthday())).append("\r\n");
-            }
-
-            if (!isEmpty(contact.getNotes())) {
-                vcardBuilder.append("NOTE:").append(escapeVCardValue(contact.getNotes())).append("\r\n");
-            }
-
-            // 自定义字段 - 使用X-前缀
-            if (!isEmpty(contact.getQq())) {
-                vcardBuilder.append("X-QQ:").append(escapeVCardValue(contact.getQq())).append("\r\n");
-            }
-
-            if (!isEmpty(contact.getWechat())) {
-                vcardBuilder.append("X-WECHAT:").append(escapeVCardValue(contact.getWechat())).append("\r\n");
-            }
-
-            if (!isEmpty(contact.getPostalCode())) {
-                vcardBuilder.append("X-POSTAL-CODE:").append(escapeVCardValue(contact.getPostalCode())).append("\r\n");
-            }
-
-            // 添加照片(如果有)
-            if (contact.getPhoto() != null && !contact.getPhoto().isEmpty()) {
                 try {
-                    // 从data URI提取Base64数据
-                    if (contact.getPhoto().startsWith("data:image/")) {
-                        String imageType = "JPEG";
-                        if (contact.getPhoto().contains("png")) {
-                            imageType = "PNG";
-                        } else if (contact.getPhoto().contains("gif")) {
-                            imageType = "GIF";
+                    // 尝试解析各种格式的生日
+                    String birthdayStr = contact.getBirthday();
+                    Date birthDate = null;
+                    
+                    // 尝试解析不同格式
+                    String[] dateFormats = {
+                        "yyyy-MM-dd", "yyyyMMdd", "yyyy/MM/dd", 
+                        "MM/dd/yyyy", "dd/MM/yyyy"
+                    };
+                    
+                    for (String format : dateFormats) {
+                        try {
+                            SimpleDateFormat dateFormat = new SimpleDateFormat(format, Locale.getDefault());
+                            birthDate = dateFormat.parse(birthdayStr);
+                            if (birthDate != null) break;
+                        } catch (ParseException e) {
+                            // 继续尝试下一个格式
                         }
-
-                        int commaIndex = contact.getPhoto().indexOf(",");
+                    }
+                    
+                    if (birthDate != null) {
+                        vcard.setBirthday(new Birthday(birthDate));
+                    } else {
+                        // 无法解析，添加为字符串
+                        vcard.addExtendedProperty("X-BIRTHDAY", birthdayStr);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "设置生日失败", e);
+                    vcard.addExtendedProperty("X-BIRTHDAY", contact.getBirthday());
+                }
+            }
+            
+            // 设置备注
+            if (!isEmpty(contact.getNotes())) {
+                vcard.addNote(new Note(contact.getNotes()));
+            }
+            
+            // 设置照片
+            if (!isEmpty(contact.getPhoto())) {
+                try {
+                    // 处理data URI格式的照片
+                    String photoData = contact.getPhoto();
+                    if (photoData.startsWith("data:image/")) {
+                        int commaIndex = photoData.indexOf(",");
                         if (commaIndex > 0) {
-                            String base64Data = contact.getPhoto().substring(commaIndex + 1);
-                            // 使用标准格式，每行最多75个字符
-                            vcardBuilder.append("PHOTO;ENCODING=b;TYPE=").append(imageType).append(":");
-                            for (int i = 0; i < base64Data.length(); i += 75) {
-                                if (i > 0) {
-                                    vcardBuilder.append("\r\n ");  // 折叠行标记
-                                }
-                                vcardBuilder.append(base64Data.substring(i, Math.min(i + 75, base64Data.length())));
-                            }
-                            vcardBuilder.append("\r\n");
+                            String base64Data = photoData.substring(commaIndex + 1);
+                            byte[] photoBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT);
+                            Photo photo = new Photo(photoBytes, null);
+                            vcard.addPhoto(photo);
                         }
+                    } else {
+                        // 可能是直接的Base64字符串
+                        byte[] photoBytes = android.util.Base64.decode(photoData, android.util.Base64.DEFAULT);
+                        Photo photo = new Photo(photoBytes, null);
+                        vcard.addPhoto(photo);
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "添加照片到vCard失败", e);
                 }
             }
-
-            vcardBuilder.append("END:VCARD\r\n\r\n");
+            
+            // 设置自定义字段
+            if (!isEmpty(contact.getQq())) {
+                vcard.addExtendedProperty("X-QQ", contact.getQq());
+            }
+            
+            if (!isEmpty(contact.getWechat())) {
+                vcard.addExtendedProperty("X-WECHAT", contact.getWechat());
+            }
+            
+            if (!isEmpty(contact.getPostalCode())) {
+                vcard.addExtendedProperty("X-POSTAL-CODE", contact.getPostalCode());
+            }
+            
+            vcards.add(vcard);
         }
-
-        return vcardBuilder.toString();
+        
+        // 将vCard列表写入字符串
+        return Ezvcard.write(vcards).version(VCardVersion.V3_0).go();
     }
 
     /**
@@ -342,7 +404,7 @@ public class ContactIOUtil {
     }
 
     /**
-     * 解析vCard文件为联系人列表，支持2.1和3.0版本
+     * 解析vCard文件为联系人列表，使用EZ-VCard库
      */
     public static List<Contact> parseContactsFromVCard(String vcardContent) {
         List<Contact> contacts = new ArrayList<>();
@@ -352,398 +414,175 @@ public class ContactIOUtil {
         }
 
         Log.d(TAG, "开始解析vCard，内容长度: " + vcardContent.length());
-        Log.d(TAG, "vCard内容前100字符: " + (vcardContent.length() > 100 ? vcardContent.substring(0, 100) : vcardContent));
-
-
-
-        // 检测文件编码
-        boolean containsUTF8Chars = false;
-        boolean containsNonASCII = false;
-
-        for (int i = 0; i < Math.min(vcardContent.length(), 1000); i++) {
-            char c = vcardContent.charAt(i);
-            if (c > 127) {
-                containsNonASCII = true;
-                if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS) {
-                    containsUTF8Chars = true;
+        
+        try {
+            // 使用EZ-VCard解析vCard内容
+            List<VCard> vcards = Ezvcard.parse(vcardContent).all();
+            Log.d(TAG, "成功解析vCard，共找到" + vcards.size() + "个联系人");
+            
+            for (VCard vcard : vcards) {
+                Contact contact = new Contact();
+                contact.setGroupIds(new ArrayList<>());
+                
+                // 解析姓名
+                FormattedName formattedName = vcard.getFormattedName();
+                if (formattedName != null) {
+                    contact.setName(formattedName.getValue());
+                } else {
+                    // 如果没有FN字段，尝试从StructuredName构造
+                    StructuredName structuredName = vcard.getStructuredName();
+                    if (structuredName != null) {
+                        StringBuilder nameBuilder = new StringBuilder();
+                        if (structuredName.getFamily() != null) {
+                            nameBuilder.append(structuredName.getFamily());
+                        }
+                        if (structuredName.getGiven() != null) {
+                            nameBuilder.append(structuredName.getGiven());
+                        }
+                        if (nameBuilder.length() > 0) {
+                            contact.setName(nameBuilder.toString());
+                        }
+                    }
+                }
+                
+                // 解析电话号码
+                for (Telephone telephone : vcard.getTelephoneNumbers()) {
+                    if (telephone.getTypes().contains(TelephoneType.CELL)) {
+                        // 手机号
+                        contact.setMobileNumber(telephone.getText());
+                    } else if (telephone.getTypes().contains(TelephoneType.HOME) || 
+                               telephone.getTypes().contains(TelephoneType.WORK)) {
+                        // 固定电话
+                        contact.setTelephoneNumber(telephone.getText());
+                    } else if (contact.getMobileNumber() == null) {
+                        // 如果没有指定类型且手机号为空，默认设为手机号
+                        contact.setMobileNumber(telephone.getText());
+                    } else if (contact.getTelephoneNumber() == null) {
+                        // 否则设为固定电话
+                        contact.setTelephoneNumber(telephone.getText());
+                    }
+                }
+                
+                // 解析邮箱
+                if (!vcard.getEmails().isEmpty()) {
+                    contact.setEmail(vcard.getEmails().get(0).getValue());
+                }
+                
+                // 解析地址
+                if (!vcard.getAddresses().isEmpty()) {
+                    Address address = vcard.getAddresses().get(0);
+                    StringBuilder addrBuilder = new StringBuilder();
+                    if (address.getStreetAddress() != null) {
+                        addrBuilder.append(address.getStreetAddress()).append(" ");
+                    }
+                    if (address.getLocality() != null) {
+                        addrBuilder.append(address.getLocality()).append(" ");
+                    }
+                    if (address.getRegion() != null) {
+                        addrBuilder.append(address.getRegion()).append(" ");
+                    }
+                    if (address.getPostalCode() != null) {
+                        addrBuilder.append(address.getPostalCode()).append(" ");
+                    }
+                    if (address.getCountry() != null) {
+                        addrBuilder.append(address.getCountry());
+                    }
+                    if (addrBuilder.length() > 0) {
+                        contact.setAddress(addrBuilder.toString().trim());
+                    }
+                }
+                
+                // 解析公司
+                Organization org = vcard.getOrganization();
+                if (org != null && !org.getValues().isEmpty()) {
+                    contact.setCompany(org.getValues().get(0));
+                }
+                
+                // 解析网站
+                if (!vcard.getUrls().isEmpty()) {
+                    contact.setWebsite(vcard.getUrls().get(0).getValue());
+                }
+                
+                // 解析生日
+                Birthday birthday = vcard.getBirthday();
+                if (birthday != null && birthday.getDate() != null) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    contact.setBirthday(sdf.format(birthday.getDate()));
+                } else {
+                    // 尝试从扩展属性获取
+                    RawProperty birthdayProp = vcard.getExtendedProperty("X-BIRTHDAY");
+                    if (birthdayProp != null) {
+                        contact.setBirthday(birthdayProp.getValue());
+                    }
+                }
+                
+                // 解析备注
+                if (!vcard.getNotes().isEmpty()) {
+                    contact.setNotes(vcard.getNotes().get(0).getValue());
+                }
+                
+                // 解析自定义字段
+                RawProperty qqProp = vcard.getExtendedProperty("X-QQ");
+                if (qqProp != null) {
+                    contact.setQq(qqProp.getValue());
+                }
+                
+                RawProperty wechatProp = vcard.getExtendedProperty("X-WECHAT");
+                if (wechatProp != null) {
+                    contact.setWechat(wechatProp.getValue());
+                }
+                
+                RawProperty postalCodeProp = vcard.getExtendedProperty("X-POSTAL-CODE");
+                if (postalCodeProp != null) {
+                    contact.setPostalCode(postalCodeProp.getValue());
+                }
+                
+                // 解析照片 - 使用PhotoUtil处理
+                if (!vcard.getPhotos().isEmpty()) {
+                    Photo photo = vcard.getPhotos().get(0);
+                    if (photo.getData() != null) {
+                        try {
+                            // 将字节数组转换为Bitmap
+                            Bitmap photoBitmap = BitmapFactory.decodeByteArray(
+                                photo.getData(), 0, photo.getData().length);
+                            
+                            if (photoBitmap != null) {
+                                // 使用PhotoUtil转换为Base64
+                                String base64Image = PhotoUtil.bitmapToBase64(photoBitmap);
+                                
+                                // 设置完整的data URI格式
+                                contact.setPhoto(base64Image);
+                                Log.d(TAG, "成功解析并转换照片数据");
+                            } else {
+                                Log.w(TAG, "照片数据无法解码为Bitmap");
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "处理照片数据失败: " + e.getMessage(), e);
+                        }
+                    } else if (photo.getUrl() != null) {
+                        // 如果是URL类型的照片，记录日志但不处理
+                        Log.d(TAG, "照片URL: " + photo.getUrl());
+                    }
+                }
+                
+                // 设置默认值并生成拼音
+                setDefaultValuesIfEmpty(contact);
+                contact.generatePinyin();
+                
+                if (contact.getName() != null && !contact.getName().isEmpty()) {
+                    contacts.add(contact);
                 }
             }
+            
+            Log.d(TAG, "成功解析" + contacts.size() + "个有效联系人");
+            
+        } catch (Exception e) {
+            Log.e(TAG, "解析vCard失败: " + e.getMessage(), e);
         }
-
-        Log.d(TAG, "vCard编码检测: containsNonASCII=" + containsNonASCII + ", containsUTF8Chars=" + containsUTF8Chars);
-
-        // 规范化换行符
-        vcardContent = vcardContent.replace("\r\n", "\n").replace("\r", "\n");
-        Log.d(TAG, "规范化换行符后的内容长度: " + vcardContent.length());
-
-        // 使用正则表达式分割vCard条目
-        Pattern vcardPattern = Pattern.compile("BEGIN:VCARD(.*?)END:VCARD", Pattern.DOTALL);
-        Matcher vcardMatcher = vcardPattern.matcher(vcardContent);
-
-        int cardCount = 0;
-
-        while (vcardMatcher.find()) {
-            cardCount++;
-            String vcard = "BEGIN:VCARD" + vcardMatcher.group(1) + "END:VCARD";
-            Log.d(TAG, "找到第" + cardCount + "个vCard条目，长度: " + vcard.length());
-            Log.d(TAG, "vCard条目前100字符: " + (vcard.length() > 100 ? vcard.substring(0, 100) : vcard));
-
-            // 合并折叠行
-            String originalVcard = vcard;
-            vcard = vcard.replaceAll("\n[ \t]", "");
-
-            if (originalVcard.length() != vcard.length()) {
-                Log.d(TAG, "合并折叠行: 原始长度=" + originalVcard.length() + ", 新长度=" + vcard.length());
-            }
-
-            Contact contact = new Contact();
-            contact.setGroupIds(new ArrayList<>());
-
-            // 解析版本
-            String version = "3.0"; // 默认版本
-            Pattern versionPattern = Pattern.compile("VERSION:(\\d+\\.\\d+)", Pattern.CASE_INSENSITIVE);
-            Matcher versionMatcher = versionPattern.matcher(vcard);
-            if (versionMatcher.find()) {
-                version = versionMatcher.group(1);
-                Log.d(TAG, "vCard版本: " + version);
-            } else {
-                Log.w(TAG, "未找到vCard版本，使用默认版本3.0");
-            }
-
-            // 解析各个字段
-            Pattern fieldPattern = Pattern.compile("([^:\\r\\n;]+)(?:;([^:\\r\\n]*))??:([^\\r\\n]+)");
-            Matcher fieldMatcher = fieldPattern.matcher(vcard);
-
-            int fieldCount = 0;
-
-            while (fieldMatcher.find()) {
-                fieldCount++;
-                String fieldName = fieldMatcher.group(1).trim().toUpperCase();
-                String params = fieldMatcher.group(2);
-                String value = fieldMatcher.group(3).trim();
-
-                Log.d(TAG, "解析字段 #" + fieldCount + ": 名称=" + fieldName + ", 参数=" + params + ", 值=" + value);
-                processVCardField(contact, fieldName, params, value, version);
-            }
-
-            Log.d(TAG, "vCard条目共有" + fieldCount + "个字段");
-
-            // 处理完成后，设置默认值并添加到列表
-            setDefaultValuesIfEmpty(contact);
-            contact.generatePinyin();
-
-            if (contact.getName() != null && !contact.getName().isEmpty()) {
-                Log.d(TAG, "添加联系人: " + contact.getName() + ", 手机: " + contact.getMobileNumber());
-                contacts.add(contact);
-            } else {
-                Log.w(TAG, "联系人名称为空，不添加此联系人");
-            }
-        }
-
-        Log.d(TAG, "vCard解析完成，共找到" + cardCount + "个vCard条目，有效联系人: " + contacts.size() + "个");
-
+        
         return contacts;
     }
-
-    /**
-     * 处理vCard单个字段
-     */
-    private static void processVCardField(Contact contact, String fieldName, String params, String value, String version) {
-        // 处理编码类型
-        boolean isBase64 = params != null && params.toUpperCase().contains("ENCODING=B");
-        boolean isQuotedPrintable = params != null && params.toUpperCase().contains("ENCODING=QUOTED-PRINTABLE");
-
-        String charset = "UTF-8";
-        if (params != null && params.toUpperCase().contains("CHARSET=")) {
-            Pattern charsetPattern = Pattern.compile("CHARSET=([\\w-]+)", Pattern.CASE_INSENSITIVE);
-            Matcher charsetMatcher = charsetPattern.matcher(params);
-            if (charsetMatcher.find()) {
-                charset = charsetMatcher.group(1);
-                Log.d(TAG, "字段" + fieldName + "指定字符集: " + charset);
-            }
-        }
-
-        // 处理Quoted-Printable编码
-        if (isQuotedPrintable) {
-            Log.d(TAG, "处理Quoted-Printable编码字段: " + fieldName + ", 原始值: " + value);
-            try {
-                String decodedValue = decodeQuotedPrintable(value, charset);
-                Log.d(TAG, "Quoted-Printable解码后: " + decodedValue);
-                value = decodedValue;
-            } catch (Exception e) {
-                Log.e(TAG, "Quoted-Printable解码失败: " + e.getMessage(), e);
-            }
-        }
-        // 处理Base64编码
-        else if (isBase64) {
-            Log.d(TAG, "处理Base64编码字段: " + fieldName + ", 原始值长度: " + value.length());
-            try {
-                // 移除所有空白字符
-                String cleanedValue = value.replaceAll("\\s", "");
-                Log.d(TAG, "清理空白字符后Base64长度: " + cleanedValue.length());
-
-                byte[] decoded = Base64.getDecoder().decode(cleanedValue);
-                Log.d(TAG, "Base64解码成功，字节数: " + decoded.length);
-
-                // 如果是照片字段，直接保存为二进制数据
-                if (fieldName.equals("PHOTO")) {
-                    value = cleanedValue; // 保留原始Base64字符串，后面会特殊处理
-                } else {
-                    // 尝试不同的字符集
-                    String utf8Value = new String(decoded, StandardCharsets.UTF_8);
-                    String specificValue = new String(decoded, Charset.forName(charset));
-                    String iso8859Value = new String(decoded, StandardCharsets.ISO_8859_1);
-
-                    Log.d(TAG, "Base64解码后(UTF-8): " + utf8Value);
-                    Log.d(TAG, "Base64解码后(" + charset + "): " + specificValue);
-                    Log.d(TAG, "Base64解码后(ISO-8859-1): " + iso8859Value);
-
-                    // 判断最可能的正确编码
-                    if (isChinese(utf8Value)) {
-                        Log.d(TAG, "UTF-8解码结果包含中文，使用UTF-8");
-                        value = utf8Value;
-                    } else if (isChinese(specificValue)) {
-                        Log.d(TAG, charset + "解码结果包含中文，使用" + charset);
-                        value = specificValue;
-                    } else {
-                        value = specificValue; // 使用指定字符集
-                        Log.d(TAG, "使用指定字符集" + charset + "解码结果");
-                    }
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Base64解码失败: " + e.getMessage(), e);
-            }
-        } else if (fieldName.equals("PHOTO") && value.length() > 100) {
-            // 记录PHOTO字段但不打印完整值
-            Log.d(TAG, "找到PHOTO字段，长度: " + value.length());
-        }
-
-        // 处理转义
-        if (!fieldName.equals("PHOTO")) {
-            String originalValue = value;
-            value = value.replace("\\n", "\n")
-                    .replace("\\,", ",")
-                    .replace("\\;", ";")
-                    .replace("\\:", ":");
-
-            if (!originalValue.equals(value)) {
-                Log.d(TAG, "处理转义字符: 字段=" + fieldName);
-            }
-        }
-
-        switch (fieldName) {
-            case "FN":
-                contact.setName(value);
-                Log.d(TAG, "设置联系人名称: " + value);
-                break;
-
-            case "N":
-                if (isEmpty(contact.getName())) {
-                    String[] parts = value.split(";");
-                    Log.d(TAG, "解析N字段，部分数量: " + parts.length);
-                    for (int i = 0; i < parts.length; i++) {
-                        Log.d(TAG, "N字段部分 #" + i + ": " + parts[i]);
-                    }
-
-                    if (parts.length >= 2 && !isEmpty(parts[0]) && !isEmpty(parts[1])) {
-                        // 中文习惯：姓在前，名在后
-                        if (isChinese(parts[0]) || isChinese(parts[1])) {
-                            contact.setName(parts[0] + parts[1]);
-                            Log.d(TAG, "中文姓名格式: " + parts[0] + parts[1]);
-                        } else {
-                            // 西方习惯：名在前，姓在后
-                            contact.setName(parts[1] + " " + parts[0]);
-                            Log.d(TAG, "西方姓名格式: " + parts[1] + " " + parts[0]);
-                        }
-                    } else if (parts.length > 0 && !isEmpty(parts[0])) {
-                        contact.setName(parts[0]);
-                        Log.d(TAG, "仅使用姓氏: " + parts[0]);
-                    } else if (parts.length > 1 && !isEmpty(parts[1])) {
-                        contact.setName(parts[1]);
-                        Log.d(TAG, "仅使用名字: " + parts[1]);
-                    }
-                }
-                break;
-
-            case "PHOTO":
-                try {
-                    if (isBase64) {
-                        // 直接使用原始base64内容，移除所有空白字符
-                        String cleanedBase64 = value.replaceAll("\\s", "");
-                        Log.d(TAG, "设置联系人照片，Base64长度: " + cleanedBase64.length());
-                        contact.setPhoto(cleanedBase64);
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "解析照片失败: " + e.getMessage(), e);
-                    contact.setPhoto(null); // 解析失败时设置为null
-                }
-                break;
-
-            case "TEL":
-                if (params != null) {
-                    if (params.toUpperCase().contains("CELL") || params.toUpperCase().contains("MOBILE")) {
-                        contact.setMobileNumber(value);
-                        Log.d(TAG, "设置手机号码: " + value);
-                    } else {
-                        contact.setTelephoneNumber(value);
-                        Log.d(TAG, "设置固定电话: " + value);
-                    }
-                } else {
-                    // 没有类型参数，默认设为手机号
-                    contact.setMobileNumber(value);
-                    Log.d(TAG, "设置默认手机号码: " + value);
-                }
-                break;
-
-            case "EMAIL":
-                contact.setEmail(value);
-                Log.d(TAG, "设置电子邮箱: " + value);
-                break;
-
-            case "ADR":
-                // ADR格式: PO Box;扩展地址;街道地址;城市;省/州;邮编;国家
-                String[] addrParts = value.split(";");
-                StringBuilder address = new StringBuilder();
-                for (int i = 2; i < addrParts.length; i++) {
-                    if (!isEmpty(addrParts[i])) {
-                        if (address.length() > 0) {
-                            address.append(" ");
-                        }
-                        address.append(addrParts[i]);
-                    }
-                }
-                contact.setAddress(address.toString());
-                Log.d(TAG, "设置地址: " + address);
-                break;
-
-            case "ORG":
-                contact.setCompany(value);
-                Log.d(TAG, "设置公司: " + value);
-                break;
-
-            case "URL":
-                contact.setWebsite(value);
-                Log.d(TAG, "设置网站: " + value);
-                break;
-
-            case "BDAY":
-                contact.setBirthday(value);
-                Log.d(TAG, "设置生日: " + value);
-                break;
-
-            case "NOTE":
-                contact.setNotes(value);
-                Log.d(TAG, "设置备注: " + value);
-                break;
-
-            case "X-QQ":
-                contact.setQq(value);
-                Log.d(TAG, "设置QQ: " + value);
-                break;
-
-            case "X-WECHAT":
-                contact.setWechat(value);
-                Log.d(TAG, "设置微信: " + value);
-                break;
-
-            case "X-POSTAL-CODE":
-                contact.setPostalCode(value);
-                Log.d(TAG, "设置邮政编码: " + value);
-                break;
-
-            default:
-                Log.d(TAG, "未处理的字段类型: " + fieldName + " = " + value);
-                break;
-        }
-    }
-
-    /**
-     * vCard字段转义
-     */
-    private static String escapeVCardValue(String value) {
-        if (value == null || value.equals("无")) return "";
-        return value.replace("\\", "\\\\")
-                   .replace("\n", "\\n")
-                   .replace(",", "\\,")
-                   .replace(";", "\\;")
-                   .replace(":", "\\:");
-    }
-
-    /**
-     * 格式化生日为标准格式
-     */
-    private static String formatBirthday(String birthday) {
-        if (birthday == null || birthday.equals("无")) return "";
-
-        // 如果已经是标准格式如YYYY-MM-DD或YYYYMMDD，直接返回
-        if (birthday.matches("\\d{4}-\\d{2}-\\d{2}")) {
-            return birthday.replace("-", "");
-        } else if (birthday.matches("\\d{8}")) {
-            return birthday;
-        }
-
-        // 尝试解析常见日期格式
-        try {
-            // 处理 MM/DD/YYYY 或 DD/MM/YYYY 格式
-            if (birthday.matches("\\d{1,2}/\\d{1,2}/\\d{4}")) {
-                String[] parts = birthday.split("/");
-                return parts[2] + (parts[0].length() == 1 ? "0" + parts[0] : parts[0]) +
-                       (parts[1].length() == 1 ? "0" + parts[1] : parts[1]);
-            }
-
-            // 处理 YYYY/MM/DD 格式
-            if (birthday.matches("\\d{4}/\\d{1,2}/\\d{1,2}")) {
-                String[] parts = birthday.split("/");
-                return parts[0] + (parts[1].length() == 1 ? "0" + parts[1] : parts[1]) +
-                       (parts[2].length() == 1 ? "0" + parts[2] : parts[2]);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "格式化生日失败", e);
-        }
-
-        return birthday;
-    }
-
-    /**
-     * 解码Quoted-Printable编码的文本
-     */
-    private static String decodeQuotedPrintable(String input, String charset) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        for (int i = 0; i < input.length(); i++) {
-            char ch = input.charAt(i);
-            if (ch == '=') {
-                if (i + 2 < input.length()) {
-                    // 解析两个十六进制字符
-                    String hex = input.substring(i + 1, i + 3);
-                    try {
-                        int value = Integer.parseInt(hex, 16);
-                        baos.write(value);
-                        i += 2; // 跳过已处理的两个十六进制字符
-                    } catch (NumberFormatException e) {
-                        // 如果不是有效的十六进制，则处理软换行情况
-                        if (input.charAt(i + 1) == '\r' && input.charAt(i + 2) == '\n') {
-                            i += 2; // 跳过软换行
-                        } else if (input.charAt(i + 1) == '\n') {
-                            i += 1; // 跳过软换行
-                        } else {
-                            // 不是有效的编码，当作普通字符处理
-                            baos.write('=');
-                        }
-                    }
-                } else {
-                    // 到达字符串末尾，不完整的编码
-                    baos.write('=');
-                }
-            } else {
-                // 普通ASCII字符
-                baos.write(ch);
-            }
-        }
-
-        return new String(baos.toByteArray(), charset);
-    }
-
+    
     private static boolean isEmpty(String str) {
         return str == null || str.isEmpty() || str.equals("无");
     }
@@ -773,7 +612,4 @@ public class ContactIOUtil {
         if (isEmpty(contact.getPostalCode())) contact.setPostalCode(null);
         if (isEmpty(contact.getNotes())) contact.setNotes(null);
     }
-
-
-
 }

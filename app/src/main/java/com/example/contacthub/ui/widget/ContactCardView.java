@@ -87,21 +87,17 @@ public class ContactCardView extends FrameLayout {
 
     public ContactCardView(@NonNull Context context) {
         super(context);
-        init(context, null);
+        init(context);
     }
 
     public ContactCardView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init(context, attrs);
+        init(context);
     }
 
     public ContactCardView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context, attrs);
-    }
-
-    public Contact getCurrentContact() {
-        return currentContact;
+        init(context);
     }
 
     public void setContact(Contact contact) {
@@ -231,7 +227,7 @@ public class ContactCardView extends FrameLayout {
         }
     }
 
-    private void init(Context context, AttributeSet attrs) {
+    private void init(Context context) {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.view_contact_card, this, true);
 

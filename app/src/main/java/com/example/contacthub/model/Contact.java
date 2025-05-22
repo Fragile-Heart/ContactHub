@@ -24,7 +24,7 @@ public class Contact implements Serializable {
     private String email;
     private String address;
     private List<Integer> groupIds;
-    private String photo;
+    private String photo; //存储base64编码
     private String pinyin; // 姓名拼音
     private String firstLetter; // 姓名拼音首字母
 

@@ -57,8 +57,7 @@ public class QRCodeUtil {
         contactJson.put("telephoneNumber", contact.getTelephoneNumber() != null ? contact.getTelephoneNumber() : "");
         contactJson.put("email", contact.getEmail() != null ? contact.getEmail() : "");
         contactJson.put("address", contact.getAddress() != null ? contact.getAddress() : "");
-        
-        // 添加联系人的其他字段
+        contactJson.put("photo", contact.getPhoto() != null ? contact.getPhoto() : "");
         contactJson.put("qq", contact.getQq() != null ? contact.getQq() : "");
         contactJson.put("wechat", contact.getWechat() != null ? contact.getWechat() : "");
         contactJson.put("website", contact.getWebsite() != null ? contact.getWebsite() : "");
@@ -81,8 +80,7 @@ public class QRCodeUtil {
         contact.setTelephoneNumber(jsonObject.optString("telephoneNumber", ""));
         contact.setEmail(jsonObject.optString("email", ""));
         contact.setAddress(jsonObject.optString("address", ""));
-        
-        // 获取联系人的其他字段
+        contact.setPhoto(jsonObject.optString("photo", ""));
         contact.setQq(jsonObject.optString("qq", ""));
         contact.setWechat(jsonObject.optString("wechat", ""));
         contact.setWebsite(jsonObject.optString("website", ""));

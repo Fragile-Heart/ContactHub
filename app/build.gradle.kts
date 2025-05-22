@@ -57,6 +57,7 @@ dependencies {
         exclude(group = "com.google.zxing", module = "core")
     }
     implementation(libs.core.v352)
+    implementation(libs.ezVcard)
     
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
