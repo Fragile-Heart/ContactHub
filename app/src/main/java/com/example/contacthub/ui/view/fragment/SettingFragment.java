@@ -101,20 +101,11 @@ public class SettingFragment extends Fragment {
 
         binding.buttonExportContacts.setOnClickListener(v -> showExportOptions());
 
-        binding.switchTheme.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                showToast("切换到黑夜模式");
-            } else {
-                showToast("切换到白天模式");
-            }
-        });
-
         // 添加联系人显示设置点击事件
         binding.buttonContactDisplaySettings.setOnClickListener(v -> showContactDisplaySettings());
 
-        binding.buttonOtherSettings.setOnClickListener(v ->
-            showToast("其他设置功能待实现")
-        );
+        // 添加批量删除联系人点击事件
+        binding.buttonBatchDeleteContacts.setOnClickListener(v -> showBatchDeleteContacts());
     }
 
     private void showExportOptions() {
@@ -357,5 +348,95 @@ public class SettingFragment extends Fragment {
                .setNegativeButton("取消", (dialog, id) -> dialog.dismiss());
 
         builder.create().show();
+    }
+
+    /**
+     * 显示批量删除联系人对话框
+     */
+    private void showBatchDeleteContacts() {
+        FileUtil fileUtil = new FileUtil(requireContext());
+        String contactsJson = fileUtil.readFile("contacts.json");
+
+        if (contactsJson == null || contactsJson.isEmpty()) {
+            showToast("无法读取联系人数据");
+            return;
+        }
+
+        // 解析联系人数据
+        Type contactListType = new TypeToken<List<Contact>>(){}.getType();
+        List<Contact> contacts = new Gson().fromJson(contactsJson, contactListType);
+
+        if (contacts.isEmpty()) {
+            showToast("没有联系人可删除");
+            return;
+        }
+
+        // 准备多选对话框的数据
+        String[] contactNames = new String[contacts.size()];
+        boolean[] checkedItems = new boolean[contacts.size()];
+
+        for (int i = 0; i < contacts.size(); i++) {
+            contactNames[i] = contacts.get(i).getName();
+            checkedItems[i] = false; // 默认不选中
+        }
+
+        // 创建并显示多选对话框
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("选择要删除的联系人")
+               .setMultiChoiceItems(contactNames, checkedItems, (dialog, which, isChecked) -> {
+                   checkedItems[which] = isChecked;
+               })
+               .setPositiveButton("删除", (dialog, id) -> {
+                   deleteSelectedContacts(contacts, checkedItems);
+               })
+               .setNegativeButton("取消", (dialog, id) -> dialog.dismiss());
+        
+        builder.create().show();
+    }
+    
+    /**
+     * 删除选中的联系人
+     * @param contacts 所有联系人列表
+     * @param checkedItems 选中状态数组
+     */
+    private void deleteSelectedContacts(List<Contact> contacts, boolean[] checkedItems) {
+        // 确认删除对话框
+        AlertDialog.Builder confirmBuilder = new AlertDialog.Builder(requireContext());
+        confirmBuilder.setTitle("确认删除")
+                      .setMessage("确定要删除选中的联系人吗？此操作不可撤销。")
+                      .setPositiveButton("确定", (dialog, which) -> {
+                          // 执行删除操作
+                          List<Contact> remainingContacts = new ArrayList<>();
+                          int deleteCount = 0;
+                          
+                          for (int i = 0; i < contacts.size(); i++) {
+                              if (!checkedItems[i]) {
+                                  remainingContacts.add(contacts.get(i));
+                              } else {
+                                  deleteCount++;
+                              }
+                          }
+                          
+                          // 如果没有选中任何联系人
+                          if (deleteCount == 0) {
+                              showToast("未选择任何联系人");
+                              return;
+                          }
+                          
+                          // 保存剩余的联系人列表
+                          String updatedJson = new Gson().toJson(remainingContacts);
+                          try {
+                              FileOutputStream fos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);
+                              fos.write(updatedJson.getBytes());
+                              fos.close();
+                              showToast("成功删除 " + deleteCount + " 个联系人");
+                          } catch (IOException e) {
+                              Log.e(TAG, "保存联系人失败", e);
+                              showToast("操作失败: " + e.getMessage());
+                          }
+                      })
+                      .setNegativeButton("取消", (dialog, which) -> dialog.dismiss());
+        
+        confirmBuilder.create().show();
     }
 }
