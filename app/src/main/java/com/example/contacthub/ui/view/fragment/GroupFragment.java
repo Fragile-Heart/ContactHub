@@ -33,9 +33,7 @@ import com.example.contacthub.utils.FileUtil;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.gson.Gson;
 
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -317,16 +315,9 @@ public class GroupFragment extends Fragment {
             int groupId = groupToDelete.getId();
 
             // 从内存列表中删除
-            groups.remove(position);
-            groupAdapter.notifyItemRemoved(position);
-
-            // 保存更新后的分组列表到文件
+            groups.remove(position);                groupAdapter.notifyItemRemoved(position);            // 保存更新后的分组列表到文件
             Group[] groupArray = groups.toArray(new Group[0]);
-            String json = new Gson().toJson(groupArray);
-
-            FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
-            fos.write(json.getBytes());
-            fos.close();
+            fileUtil.saveJSON(groupArray, "groups.json");
 
             // 更新联系人的分组信息（从联系人的分组列表中移除该分组ID）
             List<Contact> contacts = loadContacts();
@@ -337,17 +328,10 @@ public class GroupFragment extends Fragment {
                 if (contactGroupIds != null && contactGroupIds.contains(groupId)) {
                     contactGroupIds.remove(Integer.valueOf(groupId));
                     contactsUpdated = true;
-                }
-            }
-
-            // 如果有联系人被更新，保存联系人数据
+                }            }            // 如果有联系人被更新，保存联系人数据
             if (contactsUpdated) {
                 Contact[] contactArray = contacts.toArray(new Contact[0]);
-                String contactsJson = new Gson().toJson(contactArray);
-
-                FileOutputStream contactsFos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);
-                contactsFos.write(contactsJson.getBytes());
-                contactsFos.close();
+                fileUtil.saveJSON(contactArray, "contacts.json");
             }
 
             Toast.makeText(requireContext(), "分组已删除", Toast.LENGTH_SHORT).show();
@@ -442,18 +426,13 @@ public class GroupFragment extends Fragment {
      * @param position 分组在列表中的位置
      */
     private void updateGroupAndMembers(Group group, String newName, List<Integer> selectedContactIds, int position) {
-        try {
-            // 更新内存中的分组名称
+        try {            // 更新内存中的分组名称
             group.setName(newName);
             groupAdapter.notifyItemChanged(position);
 
             // 保存更新后的分组列表到文件
             Group[] groupArray = groups.toArray(new Group[0]);
-            String json = new Gson().toJson(groupArray);
-
-            FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
-            fos.write(json.getBytes());
-            fos.close();
+            fileUtil.saveJSON(groupArray, "groups.json");
 
             // 更新联系人的分组信息
             List<Contact> contacts = loadContacts();
@@ -482,16 +461,10 @@ public class GroupFragment extends Fragment {
                     contactGroupIds.remove(Integer.valueOf(groupId));
                     contactsUpdated = true;
                 }
-            }
-
-            // 如果有联系人被更新，保存联系人数据
+            }            // 如果有联系人被更新，保存联系人数据
             if (contactsUpdated) {
                 Contact[] contactArray = contacts.toArray(new Contact[0]);
-                String contactsJson = new Gson().toJson(contactArray);
-
-                FileOutputStream contactsFos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);
-                contactsFos.write(contactsJson.getBytes());
-                contactsFos.close();
+                fileUtil.saveJSON(contactArray, "contacts.json");
             }
 
             Toast.makeText(requireContext(), "分组已更新", Toast.LENGTH_SHORT).show();
@@ -556,15 +529,9 @@ public class GroupFragment extends Fragment {
 
             // 读取现有分组并添加新分组
             List<Group> groups = new ArrayList<>(loadGroups());
-            groups.add(newGroup);
-
-            // 保存到文件
+            groups.add(newGroup);            // 保存到文件
             Group[] groupArray = groups.toArray(new Group[0]);
-            String json = new Gson().toJson(groupArray);
-
-            FileOutputStream fos = requireContext().openFileOutput("groups.json", Context.MODE_PRIVATE);
-            fos.write(json.getBytes());
-            fos.close();
+            fileUtil.saveJSON(groupArray, "groups.json");
 
             // 刷新UI显示新的分组
             loadDataAndUpdateUI();

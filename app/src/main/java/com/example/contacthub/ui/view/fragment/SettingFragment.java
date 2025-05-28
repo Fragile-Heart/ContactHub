@@ -355,16 +355,12 @@ public class SettingFragment extends Fragment {
             contact.setId(++maxId);
             contact.generatePinyin();
             existingContacts.add(contact);
-        }
-
-        // 保存合并后的联系人列表
-        String updatedJson = new Gson().toJson(existingContacts);
+        }        // 保存合并后的联系人列表
         try {
-            FileOutputStream fos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);
-            fos.write(updatedJson.getBytes());
-            fos.close();
+            Contact[] contactArray = existingContacts.toArray(new Contact[0]);
+            fileUtil.saveJSON(contactArray, "contacts.json");
             showToast("成功导入 " + newContacts.size() + " 个联系人");
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e(TAG, "保存导入的联系人失败", e);
             showToast("保存联系人失败: " + e.getMessage());
         }
@@ -467,19 +463,16 @@ public class SettingFragment extends Fragment {
                                   deleteCount++;
                               }
                           }
-                          
-                          if (deleteCount == 0) {
+                            if (deleteCount == 0) {
                               showToast("未选择任何联系人");
                               return;
                           }
-                          
-                          String updatedJson = new Gson().toJson(remainingContacts);
-                          try {
-                              FileOutputStream fos = requireContext().openFileOutput("contacts.json", Context.MODE_PRIVATE);
-                              fos.write(updatedJson.getBytes());
-                              fos.close();
+                            try {
+                              FileUtil fileUtil = new FileUtil(requireContext());
+                              Contact[] contactArray = remainingContacts.toArray(new Contact[0]);
+                              fileUtil.saveJSON(contactArray, "contacts.json");
                               showToast("成功删除 " + deleteCount + " 个联系人");
-                          } catch (IOException e) {
+                          } catch (Exception e) {
                               Log.e(TAG, "保存联系人失败", e);
                               showToast("操作失败: " + e.getMessage());
                           }

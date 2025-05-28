@@ -495,12 +495,10 @@ public class ContactCardView extends FrameLayout {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
-        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ContactHub");
-
-        Uri uri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ContactHub");        Uri uri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
         if (uri != null) {
             try (OutputStream out = getContext().getContentResolver().openOutputStream(uri)) {
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                PhotoUtil.saveBitmapToStream(bitmap, out);
                 Toast.makeText(getContext(), "二维码已保存到相册", Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 Toast.makeText(getContext(), "保存失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -524,11 +522,9 @@ public class ContactCardView extends FrameLayout {
 
             if (!directory.exists()) {
                 directory.mkdirs();
-            }
-
-            File file = new File(directory, fileName);
+            }            File file = new File(directory, fileName);
             FileOutputStream out = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            PhotoUtil.saveBitmapToStream(bitmap, out);
             out.flush();
             out.close();
 

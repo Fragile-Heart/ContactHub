@@ -27,9 +27,7 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.gson.Gson;
 
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -284,10 +282,7 @@ public class ContactEditActivity extends AppCompatActivity {
             if (isMyCard) {
                 // 保存到my.json
                 contact.setId(null); // 移除ID字段
-                String json = new Gson().toJson(contact);
-                FileOutputStream fos = openFileOutput("my.json", MODE_PRIVATE);
-                fos.write(json.getBytes());
-                fos.close();
+                fileUtil.saveObject(contact, "my.json");
                 Log.d(TAG, "我的名片已更新");
             } else {
                 updateContactGroups();

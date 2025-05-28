@@ -85,4 +85,35 @@ public class FileUtil {
             return null;
         }
     }
+
+    /**
+     * 保存原始JSON字符串到文件
+     * 
+     * @param filename 要保存的文件名
+     * @param jsonString 要保存的原始JSON字符串
+     * @throws IOException 当文件写入失败时抛出
+     */
+    public void saveRawJSON(String filename, String jsonString) throws IOException {
+        try (FileOutputStream fos = context.openFileOutput(filename, Context.MODE_PRIVATE)) {
+            fos.write(jsonString.getBytes());
+        }
+    }
+
+    /**
+     * 将单个对象保存为JSON文件
+     * 
+     * @param object 要保存的对象
+     * @param filename 目标文件名
+     * @param <T> 对象类型
+     */
+    public <T> void saveObject(T object, String filename) {
+        try {
+            String json = gson.toJson(object);
+            FileOutputStream fos = context.openFileOutput(filename, Context.MODE_PRIVATE);
+            fos.write(json.getBytes());
+            fos.close();
+        } catch (IOException e) {
+            Log.e(TAG, "保存对象到文件失败: " + filename, e);
+        }
+    }
 }

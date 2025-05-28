@@ -96,4 +96,19 @@ public class PhotoUtil {
             }
         }
     }
+
+    /**
+     * 将Bitmap保存到输出流
+     * 
+     * @param bitmap 要保存的Bitmap图像
+     * @param out 输出流
+     * @throws IOException 当写入失败时抛出
+     */
+    public static void saveBitmapToStream(Bitmap bitmap, java.io.OutputStream out) throws IOException {
+        if (bitmap == null || out == null) {
+            throw new IllegalArgumentException("Bitmap和输出流不能为null");
+        }
+        
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+    }
 }
